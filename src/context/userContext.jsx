@@ -12,7 +12,8 @@ export const UserProvider = ({ children }) => {
 
   // Setup axios interceptors for auth and session headers
   const setupAxiosInterceptors = () => {
-    axios.interceptors.request.use(
+    // Store references to interceptors for later cleanup
+    const requestInterceptor = axios.interceptors.request.use(
       (config) => {
         const token = localStorage.getItem("token");
         const sessionToken = localStorage.getItem("sessionToken");
@@ -31,7 +32,7 @@ export const UserProvider = ({ children }) => {
     );
 
     // Handle session expiry responses
-    axios.interceptors.response.use(
+    const responseInterceptor = axios.interceptors.response.use(
       (response) => response,
       (error) => {
         if (
@@ -48,13 +49,17 @@ export const UserProvider = ({ children }) => {
         return Promise.reject(error);
       }
     );
+
+    // Return the interceptor IDs for cleanup
+    return { requestInterceptor, responseInterceptor };
   };
 
   // Initialize context and check for existing session
   useEffect(() => {
-    const initializeAuth = async () => {
-      setupAxiosInterceptors();
+    // Setup interceptors and store references
+    const interceptors = setupAxiosInterceptors();
 
+    const initializeAuth = async () => {
       const token = localStorage.getItem("token");
       const sessionToken = localStorage.getItem("sessionToken");
 
@@ -75,6 +80,12 @@ export const UserProvider = ({ children }) => {
     };
 
     initializeAuth();
+
+    // Cleanup function to remove interceptors when component unmounts
+    return () => {
+      axios.interceptors.request.eject(interceptors.requestInterceptor);
+      axios.interceptors.response.eject(interceptors.responseInterceptor);
+    };
   }, []);
 
   // Login function

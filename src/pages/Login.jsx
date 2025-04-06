@@ -72,9 +72,13 @@ function Login() {
         }`
       );
     } catch (error) {
-      console.log(error.response?.data);
+      console.log(error.response);
       toast.error(error.response?.data?.message || error.message);
-      setShowVerificationPrompt(!error.response?.data?.isVerified);
+      if (error.response?.data?.isVerified === false) {
+        setShowVerificationPrompt(true);
+      } else {
+        setShowVerificationPrompt(false);
+      }
     } finally {
       setLoading(false);
     }
