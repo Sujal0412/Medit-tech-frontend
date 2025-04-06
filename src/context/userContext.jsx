@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const UserContext = createContext();
 
@@ -9,6 +10,7 @@ export const useUser = () => useContext(UserContext);
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Setup axios interceptors for auth and session headers
   const setupAxiosInterceptors = () => {
@@ -44,7 +46,7 @@ export const UserProvider = ({ children }) => {
           // Force logout
           logoutUser();
           toast.error("Your session has expired. Please login again.");
-          window.location.href = "/login";
+          navigate("/login");
         }
         return Promise.reject(error);
       }
