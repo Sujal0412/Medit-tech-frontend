@@ -133,7 +133,7 @@ function MediTechLanding() {
                   <FaArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </Link>
-              <button className="bg-white/5 hover:bg-white/10 text-white border border-gray-700 px-8 py-4 rounded-lg font-medium transition-all duration-300 w-full sm:w-auto flex items-center justify-center">
+              <button className="bg-white/5 hover:bg-white/10 text-white border border-gray-700 px-8 py-4 rounded-lg font-medium transition-all duration-300 w-auto flex items-center justify-center">
                 Watch Demo
               </button>
             </motion.div>
@@ -148,112 +148,112 @@ function MediTechLanding() {
             <div className="relative w-full max-w-4xl">
               {/* Dashboard mockup frame */}
               <div className="rounded-xl bg-gradient-to-r p-[1px] from-blue-500 to-cyan-400">
-                <div className="rounded-xl bg-gray-900 p-3 backdrop-blur-3xl">
+                <div className="rounded-xl bg-gray-900 p-2 sm:p-3 backdrop-blur-3xl">
                   {/* Frame header */}
-                  <div className="flex items-center mb-3 px-2">
+                  <div className="flex items-center mb-2 sm:mb-3 px-2">
                     <div className="flex space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-red-500"></div>
+                      <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-yellow-500"></div>
+                      <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-green-500"></div>
                     </div>
-                    <div className="mx-auto text-xs text-gray-400">
+                    <div className="mx-auto text-[10px] sm:text-xs text-gray-400">
                       MediQueue Dashboard
                     </div>
                   </div>
                   {/* Dashboard content */}
-                  <div className="bg-[#0D1117] rounded-lg p-4 sm:p-8 h-[300px] sm:h-[400px] overflow-hidden">
+                  <div className="bg-[#0D1117] rounded-lg p-3 sm:p-4 md:p-6 lg:p-8 h-[280px] xs:h-[300px] sm:h-[350px] md:h-[400px] overflow-hidden">
                     <div className="h-full flex flex-col">
                       {/* Dashboard Header */}
-                      <div className="flex justify-between items-center mb-6">
+                      <div className="flex justify-between items-center mb-3 sm:mb-6">
                         <div>
-                          <h3 className="text-lg font-bold text-gray-100">
+                          <h3 className="text-sm sm:text-base lg:text-lg font-bold text-gray-100">
                             Queue Analytics
                           </h3>
-                          <p className="text-xs text-gray-400">
-                            Today's Overview • Last updated 5 min ago
+                          <p className="text-[9px] xs:text-[10px] sm:text-xs text-gray-400">
+                            Today's Overview • Updated 5m ago
                           </p>
                         </div>
-                        <div className="flex gap-2">
-                          <div className="px-3 py-1 bg-[#171B24] rounded-md text-xs text-gray-300 border border-gray-800">
-                            Live View
+                        <div className="flex gap-1 sm:gap-2">
+                          <div className="hidden xs:flex px-2 sm:px-3 py-0.5 sm:py-1 bg-[#171B24] rounded text-[9px] sm:text-xs text-gray-300 border border-gray-800">
+                            Live
                           </div>
-                          <div className="px-3 py-1 bg-blue-900/30 rounded-md text-xs text-blue-300 border border-blue-800/30">
+                          <div className="px-1.5 sm:px-3 py-0.5 sm:py-1 bg-blue-900/30 rounded text-[9px] sm:text-xs text-blue-300 border border-blue-800/30">
                             <FaChartLine
-                              className="inline-block mr-1"
-                              size={10}
+                              className="inline-block mr-0.5 sm:mr-1"
+                              size={8}
                             />
-                            Reports
+                            <span className="hidden xs:inline">Reports</span>
                           </div>
                         </div>
                       </div>
 
-                      {/* Stats Row */}
-                      <div className="grid grid-cols-4 gap-3 mb-6">
-                        <div className="bg-[#171B24] p-3 rounded-lg border border-gray-800">
-                          <div className="text-xs text-gray-400 mb-1">
+                      {/* Stats Row - Responsive grid for mobile */}
+                      <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-4 gap-1.5 xs:gap-2 sm:gap-3 mb-3 sm:mb-6">
+                        <div className="bg-[#171B24] p-1.5 xs:p-2 sm:p-3 rounded-lg border border-gray-800">
+                          <div className="text-[8px] xs:text-[9px] sm:text-xs text-gray-400 mb-0.5 sm:mb-1">
                             Total Patients
                           </div>
-                          <div className="text-xl font-bold text-white">
+                          <div className="text-sm xs:text-base sm:text-xl font-bold text-white">
                             142
                           </div>
-                          <div className="text-xs text-green-400 mt-1">
+                          <div className="text-[8px] xs:text-[9px] sm:text-xs text-green-400 mt-0.5 sm:mt-1">
                             +12% ↑
                           </div>
                         </div>
-                        <div className="bg-[#171B24] p-3 rounded-lg border border-gray-800">
-                          <div className="text-xs text-gray-400 mb-1">
+                        <div className="bg-[#171B24] p-1.5 xs:p-2 sm:p-3 rounded-lg border border-gray-800">
+                          <div className="text-[8px] xs:text-[9px] sm:text-xs text-gray-400 mb-0.5 sm:mb-1">
                             Waiting
                           </div>
-                          <div className="text-xl font-bold text-yellow-400">
+                          <div className="text-sm xs:text-base sm:text-xl font-bold text-yellow-400">
                             27
                           </div>
-                          <div className="text-xs text-yellow-400 mt-1">
-                            ~8 min ⏱️
+                          <div className="text-[8px] xs:text-[9px] sm:text-xs text-yellow-400 mt-0.5 sm:mt-1">
+                            ~8m ⏱️
                           </div>
                         </div>
-                        <div className="bg-[#171B24] p-3 rounded-lg border border-gray-800">
-                          <div className="text-xs text-gray-400 mb-1">
+                        <div className="bg-[#171B24] p-1.5 xs:p-2 sm:p-3 rounded-lg border border-gray-800">
+                          <div className="text-[8px] xs:text-[9px] sm:text-xs text-gray-400 mb-0.5 sm:mb-1">
                             In Progress
                           </div>
-                          <div className="text-xl font-bold text-blue-400">
+                          <div className="text-sm xs:text-base sm:text-xl font-bold text-blue-400">
                             8
                           </div>
-                          <div className="text-xs text-blue-400 mt-1">
-                            4 doctors 👨‍⚕️
+                          <div className="text-[8px] xs:text-[9px] sm:text-xs text-blue-400 mt-0.5 sm:mt-1">
+                            4 docs 👨‍⚕️
                           </div>
                         </div>
-                        <div className="bg-[#171B24] p-3 rounded-lg border border-gray-800">
-                          <div className="text-xs text-gray-400 mb-1">
+                        <div className="bg-[#171B24] p-1.5 xs:p-2 sm:p-3 rounded-lg border border-gray-800">
+                          <div className="text-[8px] xs:text-[9px] sm:text-xs text-gray-400 mb-0.5 sm:mb-1">
                             Completed
                           </div>
-                          <div className="text-xl font-bold text-green-400">
+                          <div className="text-sm xs:text-base sm:text-xl font-bold text-green-400">
                             107
                           </div>
-                          <div className="text-xs text-green-400 mt-1">
+                          <div className="text-[8px] xs:text-[9px] sm:text-xs text-green-400 mt-0.5 sm:mt-1">
                             +15% ↑
                           </div>
                         </div>
                       </div>
 
-                      {/* Chart and Data Area */}
-                      <div className="grid grid-cols-3 gap-4 flex-grow">
-                        {/* Left chart: Wait time */}
-                        <div className="col-span-2 bg-[#171B24] rounded-lg border border-gray-800 p-3 flex flex-col">
-                          <div className="text-xs font-medium text-gray-300 mb-2 flex justify-between">
+                      {/* Chart and Data Area - Stack on mobile, grid on larger screens */}
+                      <div className="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-3 gap-1.5 xs:gap-2 sm:gap-4 flex-grow">
+                        {/* Left chart: Wait time - Full width on mobile */}
+                        <div className="xs:col-span-1 sm:col-span-2 bg-[#171B24] rounded-lg border border-gray-800 p-1.5 xs:p-2 sm:p-3 flex flex-col">
+                          <div className="text-[9px] xs:text-[10px] sm:text-xs font-medium text-gray-300 mb-1 sm:mb-2 flex justify-between">
                             <span>Wait Time Trend</span>
-                            <span className="text-blue-400">15 min avg</span>
+                            <span className="text-blue-400">15m avg</span>
                           </div>
                           <div className="flex-grow relative">
-                            {/* Axis labels */}
-                            <div className="absolute top-0 left-0 h-full flex flex-col justify-between text-[9px] text-gray-500">
+                            {/* Axis labels - Smaller on mobile */}
+                            <div className="absolute top-0 left-0 h-full flex flex-col justify-between text-[6px] xs:text-[7px] sm:text-[9px] text-gray-500">
                               <span>30m</span>
                               <span>15m</span>
                               <span>0m</span>
                             </div>
 
                             {/* Chart visualization */}
-                            <div className="absolute left-5 top-0 right-0 bottom-0 flex items-end">
-                              <div className="relative w-full h-full mt-2">
+                            <div className="absolute left-3 xs:left-4 sm:left-5 top-0 right-0 bottom-0 flex items-end">
+                              <div className="relative w-full h-full mt-1 sm:mt-2">
                                 {/* Chart grid lines */}
                                 <div className="absolute top-0 w-full border-t border-dashed border-gray-800"></div>
                                 <div className="absolute top-1/2 w-full border-t border-dashed border-gray-800"></div>
@@ -296,28 +296,29 @@ function MediTechLanding() {
                               </div>
                             </div>
                           </div>
-                          <div className="flex justify-between mt-1 text-[9px] text-gray-500">
-                            <span>8 AM</span>
-                            <span>10 AM</span>
-                            <span>12 PM</span>
-                            <span>2 PM</span>
+                          {/* Time labels - Reduced on mobile */}
+                          <div className="flex justify-between mt-0.5 sm:mt-1 text-[6px] xs:text-[7px] sm:text-[9px] text-gray-500">
+                            <span>8AM</span>
+                            <span className="hidden xs:block">10AM</span>
+                            <span>12PM</span>
+                            <span className="hidden xs:block">2PM</span>
                             <span>Now</span>
                           </div>
                         </div>
 
-                        {/* Right column: Queue by Department */}
-                        <div className="bg-[#171B24] rounded-lg border border-gray-800 p-3 flex flex-col">
-                          <div className="text-xs font-medium text-gray-300 mb-3">
+                        {/* Department Queues - Hidden on very small screens, shown on larger screens */}
+                        <div className="hidden xs:flex bg-[#171B24] rounded-lg border border-gray-800 p-1.5 xs:p-2 sm:p-3 flex-col">
+                          <div className="text-[9px] xs:text-[10px] sm:text-xs font-medium text-gray-300 mb-1 sm:mb-3">
                             Department Queues
                           </div>
-                          <div className="space-y-2 flex-grow">
+                          <div className="space-y-1 xs:space-y-1.5 sm:space-y-2 flex-grow">
                             <div className="flex justify-between items-center">
-                              <div className="text-xs">Cardiology</div>
-                              <div className="text-xs font-medium text-blue-400">
+                              <div className="text-[8px] xs:text-[9px] sm:text-xs">Cardiology</div>
+                              <div className="text-[8px] xs:text-[9px] sm:text-xs font-medium text-blue-400">
                                 12
                               </div>
                             </div>
-                            <div className="h-1.5 bg-[#0D1117] rounded-full overflow-hidden">
+                            <div className="h-1 sm:h-1.5 bg-[#0D1117] rounded-full overflow-hidden">
                               <div
                                 className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full"
                                 style={{ width: "80%" }}
@@ -325,12 +326,12 @@ function MediTechLanding() {
                             </div>
 
                             <div className="flex justify-between items-center">
-                              <div className="text-xs">Neurology</div>
-                              <div className="text-xs font-medium text-blue-400">
+                              <div className="text-[8px] xs:text-[9px] sm:text-xs">Neurology</div>
+                              <div className="text-[8px] xs:text-[9px] sm:text-xs font-medium text-blue-400">
                                 8
                               </div>
                             </div>
-                            <div className="h-1.5 bg-[#0D1117] rounded-full overflow-hidden">
+                            <div className="h-1 sm:h-1.5 bg-[#0D1117] rounded-full overflow-hidden">
                               <div
                                 className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full"
                                 style={{ width: "55%" }}
@@ -338,12 +339,12 @@ function MediTechLanding() {
                             </div>
 
                             <div className="flex justify-between items-center">
-                              <div className="text-xs">Orthopedics</div>
-                              <div className="text-xs font-medium text-blue-400">
+                              <div className="text-[8px] xs:text-[9px] sm:text-xs">Orthopedics</div>
+                              <div className="text-[8px] xs:text-[9px] sm:text-xs font-medium text-blue-400">
                                 5
                               </div>
                             </div>
-                            <div className="h-1.5 bg-[#0D1117] rounded-full overflow-hidden">
+                            <div className="h-1 sm:h-1.5 bg-[#0D1117] rounded-full overflow-hidden">
                               <div
                                 className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full"
                                 style={{ width: "35%" }}
@@ -351,16 +352,37 @@ function MediTechLanding() {
                             </div>
 
                             <div className="flex justify-between items-center">
-                              <div className="text-xs">Pediatrics</div>
-                              <div className="text-xs font-medium text-blue-400">
+                              <div className="text-[8px] xs:text-[9px] sm:text-xs">Pediatrics</div>
+                              <div className="text-[8px] xs:text-[9px] sm:text-xs font-medium text-blue-400">
                                 2
                               </div>
                             </div>
-                            <div className="h-1.5 bg-[#0D1117] rounded-full overflow-hidden">
+                            <div className="h-1 sm:h-1.5 bg-[#0D1117] rounded-full overflow-hidden">
                               <div
                                 className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full"
                                 style={{ width: "15%" }}
                               ></div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Mobile-only simplified department overview */}
+                        <div className="xs:hidden bg-[#171B24] rounded-lg border border-gray-800 p-2 flex-col">
+                          <div className="text-[9px] font-medium text-gray-300 mb-1">
+                            Top Departments
+                          </div>
+                          <div className="space-y-1 flex-grow">
+                            <div className="flex items-center justify-between">
+                              <div className="text-[8px]">Cardiology</div>
+                              <div className="text-[8px] font-medium text-blue-400">12</div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="text-[8px]">Neurology</div>
+                              <div className="text-[8px] font-medium text-blue-400">8</div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="text-[8px]">Others</div>
+                              <div className="text-[8px] font-medium text-blue-400">7</div>
                             </div>
                           </div>
                         </div>
