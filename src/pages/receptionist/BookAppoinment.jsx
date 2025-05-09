@@ -21,6 +21,7 @@ import {
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import WithAuthRedirect from "../../components/withAuthRedirect ";
+import { motion } from "framer-motion";
 
 function BookAppointment() {
   // State for patient search
@@ -200,233 +201,262 @@ function BookAppointment() {
     setAppointmentDetails(null);
   };
 
-  // Show success state if appointment was booked
+  const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: "easeOut" },
+    },
+  };
 
   return (
-    <div className="max-w-full">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Book Appointment</h1>
-          <p className="text-gray-500">
-            Schedule an appointment for an existing patient
-          </p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#0A0C10] text-gray-100">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative mb-6"
+        >
+          <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-blue-500/10 to-transparent rounded-full blur-3xl"></div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Form Section */}
-        <div className="lg:col-span-3">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-            {/* Patient Search Section */}
-            <div className="mb-8 border-b border-gray-200 pb-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">
-                Find Patient
-              </h2>
+          <div>
+            <h1 className="text-2xl font-bold text-white">Book Appointment</h1>
+            <p className="text-gray-400">
+              Schedule an appointment for an existing patient
+            </p>
+          </div>
+        </motion.div>
 
-              <div className="flex flex-col md:flex-row gap-3">
-                <div className="flex-grow">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Patient ID
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={patientId}
-                      onChange={handlePatientIdChange}
-                      placeholder="Enter patient ID (e.g. P2303001)"
-                      className="w-full px-3 py-2 border outline-none border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-end">
-                  <button
-                    onClick={searchPatient}
-                    disabled={searchingPatient}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center"
-                  >
-                    {searchingPatient ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                        Searching...
-                      </>
-                    ) : (
-                      <>
-                        <Search className="w-4 h-4 mr-2" />
-                        Find Patient
-                      </>
-                    )}
-                  </button>
+        {/* Main Content */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="bg-[#0D1117] rounded-lg border border-gray-800 p-6"
+        >
+          {/* Patient Search Section */}
+          <div className="mb-8 border-b border-gray-800 pb-6">
+            <h2 className="text-lg font-semibold text-gray-100 mb-4">
+              Find Patient
+            </h2>
+
+            <div className="flex flex-col md:flex-row gap-3">
+              <div className="flex-grow">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Patient ID
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={patientId}
+                    onChange={handlePatientIdChange}
+                    placeholder="Enter patient ID (e.g. P2303001)"
+                    className="w-full px-3 py-2 border outline-none bg-[#171B24] border-gray-700 rounded-lg text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
                 </div>
               </div>
-
-              {/* Display patient details when found */}
-              {patientFound && (
-                <div className="mt-4 bg-blue-50 p-4 rounded-lg border border-blue-100">
-                  <h3 className="font-medium text-blue-800 mb-2 flex items-center">
-                    <UserCheck className="w-4 h-4 mr-2" />
-                    Patient Found
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div>
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium">Name:</span>{" "}
-                        {patientFound.firstName} {patientFound.lastName}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium">Patient ID:</span>{" "}
-                        {patientFound.patientIdentifier}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium">Gender:</span>{" "}
-                        {patientFound.gender}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium">Contact:</span>{" "}
-                        {patientFound.contactNumber}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <div className="flex items-end">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={searchPatient}
+                  disabled={searchingPatient}
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-lg transition-colors flex items-center shadow-sm"
+                >
+                  {searchingPatient ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Searching...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-4 h-4 mr-2" />
+                      Find Patient
+                    </>
+                  )}
+                </motion.button>
+              </div>
             </div>
 
-            {/* Appointment Booking Form - Only shown when patient is found */}
-            {patientFound ? (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">
-                  Appointment Details
-                </h2>
-
-                {/* Department Selection */}
-                <div>
-                  <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                    <Building className="w-4 h-4 mr-2 text-blue-500" />
-                    Department
-                  </label>
-
-                  <select
-                    name="department"
-                    value={formData.department}
-                    onChange={onChange}
-                    className="w-full px-3 py-2.5 outline-none bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    required
-                  >
-                    <option value="">Select department</option>
-                    {departments.map((dept) => (
-                      <option key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Doctor Selection */}
-                <div>
-                  <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                    <User className="w-4 h-4 mr-2 text-blue-500" />
-                    Doctor
-                  </label>
-                  <div className="relative">
-                    <select
-                      name="doctor"
-                      value={formData.doctor}
-                      onChange={onChange}
-                      className="w-full px-3 py-2.5 outline-none bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                      required
-                      disabled={!formData.department || fetchingDoctors}
-                    >
-                      <option value="">
-                        {fetchingDoctors
-                          ? "Loading doctors..."
-                          : !formData.department
-                          ? "First select a department"
-                          : "Select doctor"}
-                      </option>
-                      {doctors.map((doc) => (
-                        <option key={doc._id} value={doc._id}>
-                          {`Dr. ${doc.firstName || doc.name} ${
-                            doc.lastName || ""
-                          }`}
-                        </option>
-                      ))}
-                    </select>
-                    {fetchingDoctors && (
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />
-                      </div>
-                    )}
+            {/* Display patient details when found */}
+            {patientFound && (
+              <div className="mt-4 bg-blue-900/20 p-4 rounded-lg border border-blue-800/30">
+                <h3 className="font-medium text-blue-300 mb-2 flex items-center">
+                  <UserCheck className="w-4 h-4 mr-2" />
+                  Patient Found
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-sm text-gray-300">
+                      <span className="font-medium">Name:</span>{" "}
+                      {patientFound.firstName} {patientFound.lastName}
+                    </p>
+                    <p className="text-sm text-gray-300">
+                      <span className="font-medium">Patient ID:</span>{" "}
+                      {patientFound.patientIdentifier}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-300">
+                      <span className="font-medium">Gender:</span>{" "}
+                      {patientFound.gender}
+                    </p>
+                    <p className="text-sm text-gray-300">
+                      <span className="font-medium">Contact:</span>{" "}
+                      {patientFound.contactNumber}
+                    </p>
                   </div>
                 </div>
+              </div>
+            )}
 
-                {/* Date Selection */}
-                <div>
-                  <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                    <Calendar className="w-4 h-4 mr-2 text-blue-500" />
-                    Appointment Date
-                  </label>
-                  <input
-                    type="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={onChange}
-                    className="w-full px-3 py-2.5 outline-none bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    min={new Date().toISOString().split("T")[0]}
-                    required
-                  />
+            {patientError && (
+              <div className="mt-4 bg-red-900/20 p-4 rounded-lg border border-red-800/30 text-red-300">
+                <div className="flex">
+                  <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
+                  <p>{patientError}</p>
                 </div>
-
-                {/* Reason */}
-                <div>
-                  <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                    <FileText className="w-4 h-4 mr-2 text-blue-500" />
-                    Reason for Visit
-                  </label>
-                  <textarea
-                    name="reason"
-                    value={formData.reason}
-                    onChange={onChange}
-                    placeholder="Please describe symptoms or reason for appointment"
-                    className="w-full px-3 py-3 outline-none bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    rows="4"
-                    required
-                  />
-                </div>
-
-                {/* Submit Button */}
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className={`w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-teal-400 text-white hover:from-blue-600 hover:to-teal-500 font-medium rounded-lg transition-all flex items-center justify-center gap-2 ${
-                      loading ? "opacity-80 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    {loading ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-t-transparent border-white border-solid rounded-full animate-spin" />
-                        <span>Booking Appointment...</span>
-                      </>
-                    ) : (
-                      <>
-                        <CalendarIcon className="w-5 h-5" />
-                        <span>Book Appointment</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="text-center py-6 text-gray-500">
-                <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p>Please search for a patient first to book an appointment</p>
               </div>
             )}
           </div>
-        </div>
+
+          {/* Appointment Booking Form - Only shown when patient is found */}
+          {patientFound ? (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <h2 className="text-lg font-semibold text-gray-100 mb-4">
+                Appointment Details
+              </h2>
+
+              {/* Department Selection */}
+              <div>
+                <label className="flex items-center text-sm font-medium text-gray-300 mb-2">
+                  <Building className="w-4 h-4 mr-2 text-blue-400" />
+                  Department
+                </label>
+
+                <select
+                  name="department"
+                  value={formData.department}
+                  onChange={onChange}
+                  className="w-full px-3 py-2.5 outline-none bg-[#171B24] border border-gray-700 rounded-lg text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  required
+                >
+                  <option value="">Select department</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Doctor Selection */}
+              <div>
+                <label className="flex items-center text-sm font-medium text-gray-300 mb-2">
+                  <User className="w-4 h-4 mr-2 text-blue-400" />
+                  Doctor
+                </label>
+                <div className="relative">
+                  <select
+                    name="doctor"
+                    value={formData.doctor}
+                    onChange={onChange}
+                    className="w-full px-3 py-2.5 outline-none bg-[#171B24] border border-gray-700 rounded-lg text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    required
+                    disabled={!formData.department || fetchingDoctors}
+                  >
+                    <option value="">
+                      {fetchingDoctors
+                        ? "Loading doctors..."
+                        : !formData.department
+                        ? "First select a department"
+                        : "Select doctor"}
+                    </option>
+                    {doctors.map((doc) => (
+                      <option key={doc._id} value={doc._id}>
+                        {`Dr. ${doc.firstName || doc.name} ${
+                          doc.lastName || ""
+                        }`}
+                      </option>
+                    ))}
+                  </select>
+                  {fetchingDoctors && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <RefreshCw className="w-4 h-4 text-blue-400 animate-spin" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Date Selection */}
+              <div>
+                <label className="flex items-center text-sm font-medium text-gray-300 mb-2">
+                  <Calendar className="w-4 h-4 mr-2 text-blue-400" />
+                  Appointment Date
+                </label>
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={onChange}
+                  className="w-full px-3 py-2.5 outline-none bg-[#171B24] border border-gray-700 rounded-lg text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  min={new Date().toISOString().split("T")[0]}
+                  required
+                />
+              </div>
+
+              {/* Reason */}
+              <div>
+                <label className="flex items-center text-sm font-medium text-gray-300 mb-2">
+                  <FileText className="w-4 h-4 mr-2 text-blue-400" />
+                  Reason for Visit
+                </label>
+                <textarea
+                  name="reason"
+                  value={formData.reason}
+                  onChange={onChange}
+                  placeholder="Please describe symptoms or reason for appointment"
+                  className="w-full px-3 py-3 outline-none bg-[#171B24] border border-gray-700 rounded-lg text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  rows="4"
+                  required
+                />
+              </div>
+
+              {/* Submit Button */}
+              <div className="pt-2">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-lg transition-all flex items-center justify-center gap-2 shadow-md ${
+                    loading ? "opacity-80 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-t-transparent border-white border-solid rounded-full animate-spin" />
+                      <span>Booking Appointment...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CalendarIcon className="w-5 h-5" />
+                      <span>Book Appointment</span>
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            </form>
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              <Search className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+              <p>Please search for a patient first to book an appointment</p>
+            </div>
+          )}
+        </motion.div>
       </div>
     </div>
   );

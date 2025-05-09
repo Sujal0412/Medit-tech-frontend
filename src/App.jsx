@@ -70,14 +70,62 @@ const App = () => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        <div className="animate-spin rounded-full h-12 w-12 border-2 border-solid border-t-transparent border-blue-600" />
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0A0C10]">
+        <div className="relative">
+          {/* Outer spinning circle */}
+          <div className="w-20 h-20 border-4 border-blue-900/40 border-t-blue-500 rounded-full animate-spin"></div>
+
+          {/* Inner pulsing glow */}
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-full animate-pulse opacity-70"></div>
+
+          {/* Center icon */}
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <svg
+              className="w-6 h-6 text-white"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 4V20M4 12H20"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
+        </div>
+        <div className="mt-6 text-blue-400 font-medium absolute top-1/2 left-1/2 transform -translate-x-1/2 translate-y-8">
+          Loading...
+        </div>
       </div>
     );
   }
   return (
     <Router>
-      <Toaster />
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: "#1A1E26",
+            color: "#fff",
+            border: "1px solid rgba(59, 130, 246, 0.2)",
+          },
+          success: {
+            iconTheme: {
+              primary: "#10B981",
+              secondary: "#1A1E26",
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: "#EF4444",
+              secondary: "#1A1E26",
+            },
+          },
+        }}
+      />
       <div className="">
         <Routes>
           <Route

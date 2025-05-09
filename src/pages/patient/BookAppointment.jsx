@@ -1,36 +1,22 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import toast from "react-hot-toast";
-import {
-  Calendar,
-  User,
-  Clock,
-  FileText,
-  Search,
-  Building,
-  CheckCircle,
-  X,
-  ArrowRight,
-  Calendar as CalendarIcon,
-  Stethoscope,
-  ClipboardList,
-  AlertCircle,
-  RefreshCw,
-} from "lucide-react";
-import { format } from "date-fns";
 import { Link } from "react-router-dom";
-import WithAuthRedirect from "../../components/withAuthRedirect ";
+import {
+  Building,
+  User,
+  Calendar,
+  FileText,
+  CheckCircle,
+  Clock,
+  ArrowRight,
+} from "lucide-react";
+import { motion } from "framer-motion";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 
 function BookAppointment() {
-  const [formData, setFormData] = useState({
-    department: "",
-    doctor: "",
-    date: "",
-    reason: "",
-  });
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [doctors, setDoctors] = useState([]);
-  const [fetchingDoctors, setFetchingDoctors] = useState(false);
   const [departments, setDepartments] = useState([
     { id: "cardiology", name: "Cardiology" },
     { id: "dermatology", name: "Dermatology" },
@@ -43,40 +29,62 @@ function BookAppointment() {
     { id: "dentistry", name: "Dentistry" },
     { id: "general", name: "General" },
   ]);
-  const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [doctors, setDoctors] = useState([]);
+  const [fetchingDoctors, setFetchingDoctors] = useState(false);
+  const [success, setSuccess] = useState(false);
 
-  // Fetch doctors from the API
+  const [formData, setFormData] = useState({
+    department: "",
+    doctor: "",
+    date: "",
+    reason: "",
+  });
+
+  const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: "easeOut" },
+    },
+  };
+
+  const stagger = {
+    visible: { transition: { staggerChildren: 0.15 } },
+  };
+
   useEffect(() => {
-    const fetchDoctors = async () => {
-      if (!formData.department) return;
-
-      try {
-        setFetchingDoctors(true);
-        const res = await axios.get(
-          `${import.meta.env.VITE_URL}/api/doctor/get-all-doctors/${
-            formData.department
-          }`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        setDoctors(res.data.doctors);
-      } catch (error) {
-        setDoctors([]);
-        console.error("Error fetching doctors:", error);
-        toast.error("Failed to fetch doctors");
-      } finally {
-        setFetchingDoctors(false);
-      }
-    };
-    fetchDoctors();
+    if (formData.department) {
+      fetchDoctors();
+    }
   }, [formData.department]);
 
-  // Handle input changes
+  const fetchDoctors = async () => {
+    try {
+      setFetchingDoctors(true);
+      const response = await axios.get(
+        `${import.meta.env.VITE_URL}/api/doctor/get-all-doctors/${
+          formData.department
+        }`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      setDoctors(response.data.doctors);
+    } catch (error) {
+      console.error("Error fetching doctors:", error);
+      toast.error("Failed to load doctors for this department");
+      setDoctors([]);
+    } finally {
+      setFetchingDoctors(false);
+    }
+  };
+
   const onChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
@@ -118,52 +126,66 @@ function BookAppointment() {
     }
   };
 
-  if (bookingSuccess) {
+  if (success) {
     return <SuccessState />;
   }
 
   return (
-    <div className="max-w-full">
+    <div className="min-h-screen bg-[#0A0C10] text-gray-100">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Book Appointment</h1>
-          <p className="text-gray-500">Schedule an appointment with a doctor</p>
-        </div>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative mb-6"
+      >
+        <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-blue-500/10 to-transparent rounded-full blur-3xl"></div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Form Section */}
-        <div className="lg:col-span-3">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+        <div className="relative">
+          <h1 className="text-2xl font-bold text-white mb-1">
+            Book Appointment
+          </h1>
+          <p className="text-gray-400">Schedule an appointment with a doctor</p>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={stagger}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+      >
+        <motion.div variants={fadeIn} className="lg:col-span-3">
+          <div className="bg-[#0D1117] rounded-lg border border-gray-800 p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Department Selection */}
               <div>
-                <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                  <Building className="w-4 h-4 mr-2 text-blue-500" />
+                <label className="flex items-center text-sm font-medium text-gray-300 mb-2">
+                  <Building className="w-4 h-4 mr-2 text-blue-400" />
                   Department
                 </label>
                 <select
                   name="department"
                   value={formData.department}
                   onChange={onChange}
-                  className="w-full px-3 py-2.5 outline-none bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-2.5 outline-none bg-[#171B24] border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   required
                 >
                   <option value="">Select department</option>
                   {departments.map((dept) => (
-                    <option key={dept.id} value={dept.id}>
+                    <option
+                      key={dept.id}
+                      value={dept.id}
+                      className="bg-[#171B24] text-white"
+                    >
                       {dept.name}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Doctor Selection */}
               <div>
-                <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                  <User className="w-4 h-4 mr-2 text-blue-500" />
+                <label className="flex items-center text-sm font-medium text-gray-300 mb-2">
+                  <User className="w-4 h-4 mr-2 text-blue-400" />
                   Doctor
                 </label>
                 <div className="relative">
@@ -171,11 +193,11 @@ function BookAppointment() {
                     name="doctor"
                     value={formData.doctor}
                     onChange={onChange}
-                    className="w-full px-3 py-2.5 outline-none bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-3 py-2.5 outline-none bg-[#171B24] border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     required
                     disabled={!formData.department || fetchingDoctors}
                   >
-                    <option value="">
+                    <option value="" className="bg-[#171B24] text-white">
                       {fetchingDoctors
                         ? "Loading doctors..."
                         : !formData.department
@@ -183,7 +205,11 @@ function BookAppointment() {
                         : "Select doctor"}
                     </option>
                     {doctors.map((doc) => (
-                      <option key={doc._id} value={doc._id}>
+                      <option
+                        key={doc._id}
+                        value={doc._id}
+                        className="bg-[#171B24] text-white"
+                      >
                         {`Dr. ${doc.firstName || doc.name} ${
                           doc.lastName || ""
                         }`}
@@ -192,16 +218,15 @@ function BookAppointment() {
                   </select>
                   {fetchingDoctors && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />
+                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Date Selection */}
               <div>
-                <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                  <Calendar className="w-4 h-4 mr-2 text-blue-500" />
+                <label className="flex items-center text-sm font-medium text-gray-300 mb-2">
+                  <Calendar className="w-4 h-4 mr-2 text-blue-400" />
                   Appointment Date
                 </label>
                 <input
@@ -209,16 +234,15 @@ function BookAppointment() {
                   name="date"
                   value={formData.date}
                   onChange={onChange}
-                  className="w-full px-3 py-2.5 outline-none bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-2.5 outline-none bg-[#171B24] border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   min={new Date().toISOString().split("T")[0]}
                   required
                 />
               </div>
 
-              {/* Reason */}
               <div>
-                <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                  <FileText className="w-4 h-4 mr-2 text-blue-500" />
+                <label className="flex items-center text-sm font-medium text-gray-300 mb-2">
+                  <FileText className="w-4 h-4 mr-2 text-blue-400" />
                   Reason for Visit
                 </label>
                 <textarea
@@ -226,18 +250,17 @@ function BookAppointment() {
                   value={formData.reason}
                   onChange={onChange}
                   placeholder="Please describe your symptoms or reason for appointment"
-                  className="w-full px-3 py-3 outline-none bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-3 outline-none bg-[#171B24] border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   rows="4"
                   required
                 />
               </div>
 
-              {/* Submit Button */}
               <div className="pt-2">
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-teal-400 text-white hover:from-blue-600 hover:to-teal-500 font-medium rounded-lg transition-all flex items-center justify-center gap-2 ${
+                  className={`w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2 ${
                     loading ? "opacity-80 cursor-not-allowed" : ""
                   }`}
                 >
@@ -248,7 +271,7 @@ function BookAppointment() {
                     </>
                   ) : (
                     <>
-                      <CalendarIcon className="w-5 h-5" />
+                      <Calendar className="w-5 h-5" />
                       <span>Book Appointment</span>
                     </>
                   )}
@@ -256,8 +279,8 @@ function BookAppointment() {
               </div>
             </form>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
@@ -265,55 +288,57 @@ function BookAppointment() {
 // Success state after booking
 function SuccessState() {
   return (
-    <div className="max-w-full">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-10 text-center max-w-2xl mx-auto">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle className="w-8 h-8 text-green-600" />
-        </div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-3">
-          Appointment Booked Successfully!
-        </h2>
-        <p className="text-gray-600 mb-8">
-          Your appointment has been scheduled. You can check the details in your
-          Queue Status.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            to="/patient/queue-status"
-            className="px-6 py-3 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg flex items-center justify-center gap-2 font-medium"
+    <div className="min-h-screen bg-[#0A0C10] text-gray-100 flex items-center justify-center">
+      <div className="bg-[#0D1117] rounded-xl p-[1px] bg-gradient-to-r from-blue-500 to-cyan-400 max-w-2xl w-full mx-4">
+        <div className="bg-[#0D1117] rounded-xl p-10 text-center">
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-green-400/20 rounded-full flex items-center justify-center mx-auto mb-6"
           >
-            <Clock className="w-5 h-5" />
-            Check Queue Status
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
+            <CheckCircle className="w-10 h-10 text-green-400" />
+          </motion.div>
 
-function LoadingState() {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <div className="relative">
-        <div className="w-20 h-20 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-blue-500 rounded-full animate-pulse opacity-70"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <svg
-            className="w-6 h-6 text-white"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
           >
-            <path
-              d="M12 4V20M4 12H20"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
-          </svg>
+            <h2 className="text-2xl font-bold text-gray-100 mb-3">
+              Appointment Booked Successfully!
+            </h2>
+            <p className="text-gray-400 mb-8">
+              Your appointment has been scheduled. You can check the details in
+              your Queue Status.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >
+            <Link
+              to="/patient/queue-status"
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-lg flex items-center justify-center gap-2 font-medium transition-all duration-300 group"
+            >
+              Check Queue Status
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="mt-8 text-sm text-gray-500"
+          >
+            You will receive a confirmation shortly
+          </motion.div>
         </div>
       </div>
-      <div className="mt-6 text-blue-700 font-medium">Loading...</div>
     </div>
   );
 }

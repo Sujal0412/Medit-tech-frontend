@@ -1,26 +1,32 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import axios from "axios";
-import toast from "react-hot-toast";
+import { Toaster, toast } from "react-hot-toast";
 import {
   CirclePlus,
   Trash2,
   Save,
   Clock,
+  Calendar,
   CalendarDays,
   UserRound,
   GraduationCap,
   Phone,
   BookCheck,
   AlertTriangle,
+  AlertCircle,
   CheckCircle2,
   X,
   Lock,
   Eye,
   EyeOff,
   Key,
-  AlertCircle,
   Shield,
   RefreshCw,
+  Briefcase,
+  Award,
+  Laptop,
+  Globe,
 } from "lucide-react";
 
 function DoctorProfile() {
@@ -43,6 +49,7 @@ function DoctorProfile() {
   const [sessionHistory, setSessionHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState(null);
+  const [refreshingSession, setRefreshingSession] = useState(false);
 
   // Password change state
   const [passwordData, setPasswordData] = useState({
@@ -54,6 +61,19 @@ function DoctorProfile() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: "easeOut" },
+    },
+  };
+
+  const stagger = {
+    visible: { transition: { staggerChildren: 0.1 } },
+  };
 
   useEffect(() => {
     fetchProfile();
@@ -71,88 +91,120 @@ function DoctorProfile() {
           withCredentials: true,
         }
       );
-      const data = response.data.doctor;
 
-      setDoctor({
-        firstName: data.firstName || "",
-        lastName: data.lastName || "",
-        specialization: data.specialization || "",
-        qualification: data.qualification || "",
-        experience: data.experience || "",
-        contactNumber: data.contactNumber || "",
-        availability: data.availability || [],
-      });
-      setOriginalDoctor({
-        firstName: data.firstName || "",
-        lastName: data.lastName || "",
-        specialization: data.specialization || "",
-        qualification: data.qualification || "",
-        experience: data.experience || "",
-        contactNumber: data.contactNumber || "",
-        availability: data.availability || [],
-      });
+      if (response.data) {
+        setDoctor(response.data.doctor);
+        setOriginalDoctor(JSON.parse(JSON.stringify(response.data.doctor)));
+      }
     } catch (error) {
+      console.error("Error fetching profile:", error);
       toast.error("Failed to load profile data");
     } finally {
       setLoading(false);
     }
   };
+
+  const refreshSessionInfo = async () => {
+    setRefreshingSession(true);
+    await fetchSessionInfo();
+    await fetchSessionHistory();
+    setRefreshingSession(false);
+  };
+
   const fetchSessionHistory = async () => {
     try {
       setLoadingHistory(true);
-      setHistoryError(null);
-
+      const token = localStorage.getItem("token");
       const response = await axios.get(
         `${import.meta.env.VITE_URL}/api/user/session-history`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "x-session-token": localStorage.getItem("sessionToken"),
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-
       setSessionHistory(response.data.sessionHistory || []);
-    } catch (error) {
+      setHistoryError(null);
+    } catch (err) {
+      console.error("Error fetching session history:", err);
       setHistoryError(
-        error.response?.data?.message || "Failed to load session history"
+        err.response?.data?.message || "Failed to fetch session history"
       );
-      toast.error("Failed to load session history");
+      setSessionHistory([]);
     } finally {
       setLoadingHistory(false);
     }
   };
+
   const getSessionDuration = (startTime, endTime) => {
-    const durationMs = endTime - startTime;
+    if (!startTime || !endTime) return "N/A";
+
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    const durationMs = end - start;
+
+    // Convert to human readable format
     const hours = Math.floor(durationMs / (1000 * 60 * 60));
     const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
 
-    return `${hours} hours, ${minutes} minutes`;
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else {
+      return `${minutes} minutes`;
+    }
   };
 
   const fetchSessionInfo = async () => {
     try {
       setLoadingSession(true);
-      setSessionError(null);
+      const token = localStorage.getItem("token");
+      const sessionToken = localStorage.getItem("sessionToken");
+
+      if (!token || !sessionToken) {
+        throw new Error("No active session");
+      }
 
       const response = await axios.get(
         `${import.meta.env.VITE_URL}/api/user/session-status`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "x-session-token": localStorage.getItem("sessionToken"),
+            Authorization: `Bearer ${token}`,
+            "x-session-token": sessionToken,
           },
         }
       );
 
       setSessionInfo(response.data.sessionStatus);
-    } catch (error) {
+      setSessionError(null);
+    } catch (err) {
+      console.error("Error fetching session info:", err);
       setSessionError(
-        error.response?.data?.message || "Failed to load session information"
+        err.response?.data?.message || "Failed to fetch session information"
       );
-      toast.error("Failed to load session information");
+      setSessionInfo(null);
     } finally {
       setLoadingSession(false);
+    }
+  };
+
+  const terminateSession = async (sessionId) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.delete(
+        `${import.meta.env.VITE_URL}/api/user/sessions/${sessionId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast.success("Session terminated successfully");
+      refreshSessionInfo();
+    } catch (err) {
+      console.error("Error terminating session:", err);
+      toast.error(err.response?.data?.message || "Failed to terminate session");
     }
   };
 
@@ -165,66 +217,51 @@ function DoctorProfile() {
 
   const onChange = (e) => {
     const { name, value } = e.target;
-    setDoctor({
-      ...doctor,
+    setDoctor((prevState) => ({
+      ...prevState,
       [name]: value,
-    });
+    }));
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleString();
+
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString();
+    } catch (error) {
+      return dateString;
+    }
   };
 
   const onPasswordChange = (e) => {
     const { name, value } = e.target;
-    setPasswordData({
-      ...passwordData,
+    setPasswordData((prevState) => ({
+      ...prevState,
       [name]: value,
-    });
+    }));
   };
 
   const onAvailabilityChange = (index, field, value) => {
-    const updatedAvailability = doctor.availability.map((slot, i) =>
-      i === index ? { ...slot, [field]: value } : slot
-    );
-    setDoctor({
-      ...doctor,
-      availability: updatedAvailability,
-    });
+    const newAvailability = [...doctor.availability];
+    newAvailability[index][field] = value;
+    setDoctor({ ...doctor, availability: newAvailability });
   };
 
   const onAddAvailability = () => {
-    const incompleteSlot = doctor.availability.some(
-      (slot) =>
-        !slot.day ||
-        !slot.startTime ||
-        !slot.endTime ||
-        slot.isAvailable === null
-    );
-
-    if (incompleteSlot) {
-      toast.error("Please complete the previous availability slot first");
-      return;
-    }
-
-    const newAvailability = [
-      ...doctor.availability,
-      {
-        day: "",
-        startTime: "",
-        endTime: "",
-        isAvailable: true,
-      },
-    ];
+    const newAvailability = [...doctor.availability];
+    newAvailability.push({
+      day: "Monday",
+      startTime: "09:00",
+      endTime: "17:00",
+    });
     setDoctor({ ...doctor, availability: newAvailability });
   };
 
   const onRemoveAvailability = (index) => {
-    const updatedAvailability = doctor.availability.filter(
-      (_, i) => i !== index
-    );
-    setDoctor({ ...doctor, availability: updatedAvailability });
+    const newAvailability = [...doctor.availability];
+    newAvailability.splice(index, 1);
+    setDoctor({ ...doctor, availability: newAvailability });
   };
 
   const hasChanges = () => {
@@ -232,12 +269,10 @@ function DoctorProfile() {
   };
 
   const saveChanges = async () => {
-    if (!hasChanges()) {
-      toast.error("No changes detected");
-      return;
-    }
     try {
       setSaveLoading(true);
+      // Validation
+
       const response = await axios.put(
         `${import.meta.env.VITE_URL}/api/doctor/profile`,
         doctor,
@@ -248,28 +283,14 @@ function DoctorProfile() {
           withCredentials: true,
         }
       );
-      const data = response.data.doctor;
-      setDoctor({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        specialization: data.specialization,
-        qualification: data.qualification,
-        experience: data.experience,
-        contactNumber: data.contactNumber,
-        availability: data.availability,
-      });
-      setOriginalDoctor({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        specialization: data.specialization,
-        qualification: data.qualification,
-        experience: data.experience,
-        contactNumber: data.contactNumber,
-        availability: data.availability,
-      });
-      toast.success("Profile updated successfully");
+
+      if (response.data) {
+        setOriginalDoctor(JSON.parse(JSON.stringify(doctor)));
+        toast.success("Profile updated successfully");
+      }
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message);
+      console.error("Error updating profile:", error);
+      toast.error(error.response?.data?.message || "Failed to update profile");
     } finally {
       setSaveLoading(false);
     }
@@ -280,19 +301,31 @@ function DoctorProfile() {
     e.preventDefault();
 
     // Validation
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error("New passwords don't match");
+    if (!passwordData.currentPassword) {
+      toast.error("Please enter your current password");
+      return;
+    }
+
+    if (!passwordData.newPassword) {
+      toast.error("Please enter a new password");
       return;
     }
 
     if (passwordData.newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
+      toast.error("New password must be at least 6 characters");
       return;
     }
 
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    if (passwordData.currentPassword) {
+    }
     try {
       setPasswordSaving(true);
-      const response = await axios.post(
+      const response = await axios.put(
         `${import.meta.env.VITE_URL}/api/user/change-password`,
         {
           oldPassword: passwordData.currentPassword,
@@ -302,11 +335,10 @@ function DoctorProfile() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-          withCredentials: true,
         }
       );
 
-      toast.success("Password updated successfully");
+      toast.success("Password changed successfully");
       setPasswordData({
         currentPassword: "",
         newPassword: "",
@@ -322,22 +354,34 @@ function DoctorProfile() {
   if (loading) return <LoadingState />;
 
   return (
-    <div className="h-full w-full">
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen">
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={stagger}
+        className="max-w-5xl mx-auto"
+      >
         {/* Header */}
-        <div className="pb-4">
-          <h1 className="text-2xl font-bold text-gray-800">Profile</h1>
-          <p className="text-gray-500">Manage and view your profile</p>
-        </div>
+        <motion.div variants={fadeIn} className="pb-4 relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-500/10 to-transparent rounded-full blur-3xl"></div>
+          <h1 className="text-2xl font-bold text-white">Profile</h1>
+          <p className="text-gray-400">
+            Manage and view your profile information
+          </p>
+        </motion.div>
+
         {/* Tab Navigation */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
-          <div className="flex border-b border-gray-700/20">
+        <motion.div
+          variants={fadeIn}
+          className="bg-[#0D1117] rounded-lg border border-gray-800 overflow-hidden mb-6"
+        >
+          <div className="flex overflow-x-auto scrollbar-hide border-b border-gray-800">
             <button
               onClick={() => setActiveSection("general")}
-              className={`px-4 py-3 font-medium flex items-center ${
+              className={`px-4 py-3 whitespace-nowrap font-medium flex items-center ${
                 activeSection === "general"
-                  ? "text-blue-600 border-b-2 border-blue-500"
-                  : "text-gray-600 hover:bg-gray-50"
+                  ? "text-blue-400 border-b-2 border-blue-500"
+                  : "text-gray-400 hover:bg-[#171B24] hover:text-gray-300"
               }`}
             >
               <UserRound className="w-4 h-4 mr-2" />
@@ -345,10 +389,10 @@ function DoctorProfile() {
             </button>
             <button
               onClick={() => setActiveSection("availability")}
-              className={`px-4 py-3 font-medium flex items-center ${
+              className={`px-4 py-3 whitespace-nowrap font-medium flex items-center ${
                 activeSection === "availability"
-                  ? "text-blue-600 border-b-2 border-blue-500"
-                  : "text-gray-600 hover:bg-gray-50"
+                  ? "text-blue-400 border-b-2 border-blue-500"
+                  : "text-gray-400 hover:bg-[#171B24] hover:text-gray-300"
               }`}
             >
               <CalendarDays className="w-4 h-4 mr-2" />
@@ -356,10 +400,10 @@ function DoctorProfile() {
             </button>
             <button
               onClick={() => setActiveSection("sessions")}
-              className={`px-4 py-3 font-medium flex items-center ${
+              className={`px-4 py-3 whitespace-nowrap font-medium flex items-center ${
                 activeSection === "sessions"
-                  ? "text-blue-600 border-b-2 border-blue-500"
-                  : "text-gray-600 hover:bg-gray-50"
+                  ? "text-blue-400 border-b-2 border-blue-500"
+                  : "text-gray-400 hover:bg-[#171B24] hover:text-gray-300"
               }`}
             >
               <Shield className="w-4 h-4 mr-2" />
@@ -367,10 +411,10 @@ function DoctorProfile() {
             </button>
             <button
               onClick={() => setActiveSection("password")}
-              className={`px-4 py-3 font-medium flex items-center ${
+              className={`px-4 py-3 whitespace-nowrap font-medium flex items-center ${
                 activeSection === "password"
-                  ? "text-blue-600 border-b-2 border-blue-500"
-                  : "text-gray-600 hover:bg-gray-50"
+                  ? "text-blue-400 border-b-2 border-blue-500"
+                  : "text-gray-400 hover:bg-[#171B24] hover:text-gray-300"
               }`}
             >
               <Lock className="w-4 h-4 mr-2" />
@@ -385,747 +429,722 @@ function DoctorProfile() {
                   <ProfileField
                     label="First Name"
                     name="firstName"
-                    value={doctor.firstName}
+                    value={doctor.firstName || ""}
                     onChange={onChange}
                     placeholder="Your first name"
-                    icon={<UserRound className="w-5 h-5 text-blue-500" />}
+                    icon={<UserRound className="w-5 h-5 text-blue-400" />}
                   />
                   <ProfileField
                     label="Last Name"
                     name="lastName"
-                    value={doctor.lastName}
+                    value={doctor.lastName || ""}
                     onChange={onChange}
                     placeholder="Your last name"
-                    icon={<UserRound className="w-5 h-5 text-blue-500" />}
+                    icon={<UserRound className="w-5 h-5 text-blue-400" />}
                   />
                 </div>
 
                 <ProfileField
                   label="Specialization"
                   name="specialization"
-                  value={doctor.specialization}
+                  value={doctor.specialization || ""}
                   onChange={onChange}
-                  isSelect={true}
-                  options={[
-                    { value: "", label: "Select specialization" },
-                    { value: "cardiology", label: "Cardiology" },
-                    { value: "dermatology", label: "Dermatology" },
-                    { value: "neurology", label: "Neurology" },
-                    { value: "orthopedics", label: "Orthopedics" },
-                    { value: "pediatrics", label: "Pediatrics" },
-                    { value: "psychiatry", label: "Psychiatry" },
-                    { value: "gynecology", label: "Gynecology" },
-                    { value: "ophthalmology", label: "Ophthalmology" },
-                    { value: "dentistry", label: "Dentistry" },
-                    { value: "general", label: "General Medicine" },
-                  ]}
-                  icon={<BookCheck className="w-5 h-5 text-blue-500" />}
+                  placeholder="Your medical specialization"
+                  icon={<Briefcase className="w-5 h-5 text-blue-400" />}
                 />
 
                 <ProfileField
                   label="Qualification"
                   name="qualification"
-                  value={doctor.qualification}
+                  value={doctor.qualification || ""}
                   onChange={onChange}
-                  placeholder="Your qualifications (e.g., MBBS, MD)"
-                  icon={<GraduationCap className="w-5 h-5 text-blue-500" />}
+                  placeholder="Your medical qualification"
+                  icon={<GraduationCap className="w-5 h-5 text-blue-400" />}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <ProfileField
-                    label="Experience (Years)"
-                    name="experience"
-                    value={doctor.experience}
-                    onChange={onChange}
-                    type="number"
-                    min="0"
-                    placeholder="Years of practice"
-                    icon={<CalendarDays className="w-5 h-5 text-blue-500" />}
-                  />
-                  <ProfileField
-                    label="Contact Number"
-                    name="contactNumber"
-                    value={doctor.contactNumber}
-                    onChange={onChange}
-                    type="tel"
-                    maxLength="10"
-                    placeholder="Your 10-digit contact number"
-                    icon={<Phone className="w-5 h-5 text-blue-500" />}
-                  />
+                <ProfileField
+                  label="Experience (years)"
+                  name="experience"
+                  value={doctor.experience || ""}
+                  onChange={onChange}
+                  placeholder="Years of experience"
+                  type="number"
+                  icon={<Award className="w-5 h-5 text-blue-400" />}
+                />
+
+                <ProfileField
+                  label="Contact Number"
+                  name="contactNumber"
+                  value={doctor.contactNumber || ""}
+                  onChange={onChange}
+                  placeholder="Your contact number"
+                  icon={<Phone className="w-5 h-5 text-blue-400" />}
+                />
+
+                <div className="flex justify-end pt-4">
+                  <button
+                    onClick={saveChanges}
+                    disabled={!hasChanges() || saveLoading}
+                    className={`px-6 py-2.5 rounded-lg text-white font-medium flex items-center gap-2 ${
+                      hasChanges() && !saveLoading
+                        ? "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600"
+                        : "bg-gray-700 cursor-not-allowed"
+                    }`}
+                  >
+                    {saveLoading ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        Save Changes
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             )}
 
             {activeSection === "availability" && (
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-800">
-                      Your Availability Schedule
-                    </h2>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Set your weekly availability for appointments
-                    </p>
-                  </div>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-medium text-white">
+                    Availability Schedule
+                  </h3>
                   <button
                     onClick={onAddAvailability}
-                    className="flex items-center px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
+                    className="px-3 py-1.5 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/30 flex items-center text-sm font-medium"
                   >
-                    <CirclePlus size={16} className="mr-2" />
+                    <CirclePlus className="w-4 h-4 mr-2" />
                     Add Availability
                   </button>
                 </div>
 
-                <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 py-2">
-                  {doctor.availability.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                      <CalendarDays className="w-12 h-12 text-gray-400 mb-3" />
-                      <h3 className="text-gray-500 font-medium mb-1">
-                        No availability set
-                      </h3>
-                      <p className="text-gray-400 text-sm mb-4">
-                        Start by adding your weekly availability
-                      </p>
-                      <button
-                        onClick={onAddAvailability}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-                      >
-                        <CirclePlus size={16} className="mr-2" />
-                        Add First Slot
-                      </button>
-                    </div>
-                  ) : (
+                <div className="space-y-4">
+                  {doctor.availability && doctor.availability.length > 0 ? (
                     doctor.availability.map((slot, index) => (
                       <div
                         key={index}
-                        className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition-shadow"
+                        className="bg-[#171B24] border border-gray-800 rounded-lg p-4"
                       >
-                        <div className="flex justify-between items-center mb-3">
-                          <div className="flex items-center">
-                            <div className="h-8 w-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3">
-                              <Clock className="h-4 w-4" />
+                        <div className="flex flex-col sm:flex-row justify-between gap-4">
+                          <div className="grid grid-cols-3 gap-4 w-full">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-400 mb-1">
+                                Day
+                              </label>
+                              <select
+                                value={slot.day}
+                                onChange={(e) =>
+                                  onAvailabilityChange(
+                                    index,
+                                    "day",
+                                    e.target.value
+                                  )
+                                }
+                                className="w-full px-3 py-2 bg-[#0D1117] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              >
+                                {[
+                                  "Monday",
+                                  "Tuesday",
+                                  "Wednesday",
+                                  "Thursday",
+                                  "Friday",
+                                  "Saturday",
+                                  "Sunday",
+                                ].map((day) => (
+                                  <option key={day} value={day}>
+                                    {day}
+                                  </option>
+                                ))}
+                              </select>
                             </div>
-                            <h3 className="font-medium text-gray-800 capitalize">
-                              {slot.day || "New Slot"}
-                            </h3>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-400 mb-1">
+                                Start Time
+                              </label>
+                              <input
+                                type="time"
+                                value={slot.startTime}
+                                onChange={(e) =>
+                                  onAvailabilityChange(
+                                    index,
+                                    "startTime",
+                                    e.target.value
+                                  )
+                                }
+                                className="w-full px-3 py-2 bg-[#0D1117] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-400 mb-1">
+                                End Time
+                              </label>
+                              <input
+                                type="time"
+                                value={slot.endTime}
+                                onChange={(e) =>
+                                  onAvailabilityChange(
+                                    index,
+                                    "endTime",
+                                    e.target.value
+                                  )
+                                }
+                                className="w-full px-3 py-2 bg-[#0D1117] border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              />
+                            </div>
                           </div>
-                          <button
-                            onClick={() => onRemoveAvailability(index)}
-                            className="p-2 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50 transition-colors"
-                            aria-label="Remove slot"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                          <div className="flex items-end justify-end">
+                            <button
+                              onClick={() => onRemoveAvailability(index)}
+                              className="p-2 text-red-400 hover:bg-red-600/20 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
                         </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          <select
-                            name="day"
-                            value={slot.day}
-                            onChange={(e) =>
-                              onAvailabilityChange(index, "day", e.target.value)
-                            }
-                            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none w-full"
-                          >
-                            <option value="">Select Day</option>
-                            <option value="monday">Monday</option>
-                            <option value="tuesday">Tuesday</option>
-                            <option value="wednesday">Wednesday</option>
-                            <option value="thursday">Thursday</option>
-                            <option value="friday">Friday</option>
-                            <option value="saturday">Saturday</option>
-                            <option value="sunday">Sunday</option>
-                          </select>
-
-                          <select
-                            name="startTime"
-                            value={slot.startTime}
-                            onChange={(e) =>
-                              onAvailabilityChange(
-                                index,
-                                "startTime",
-                                e.target.value
-                              )
-                            }
-                            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none w-full"
-                          >
-                            <option value="">Start Time</option>
-                            <option value="09:00">9:00 AM</option>
-                            <option value="10:00">10:00 AM</option>
-                            <option value="11:00">11:00 AM</option>
-                            <option value="12:00">12:00 PM</option>
-                            <option value="13:00">1:00 PM</option>
-                            <option value="14:00">2:00 PM</option>
-                            <option value="15:00">3:00 PM</option>
-                            <option value="16:00">4:00 PM</option>
-                            <option value="17:00">5:00 PM</option>
-                            <option value="18:00">6:00 PM</option>
-                            <option value="19:00">7:00 PM</option>
-                            <option value="20:00">8:00 PM</option>
-                          </select>
-
-                          <select
-                            name="endTime"
-                            value={slot.endTime}
-                            onChange={(e) =>
-                              onAvailabilityChange(
-                                index,
-                                "endTime",
-                                e.target.value
-                              )
-                            }
-                            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none w-full"
-                          >
-                            <option value="">End Time</option>
-                            <option value="10:00">10:00 AM</option>
-                            <option value="11:00">11:00 AM</option>
-                            <option value="12:00">12:00 PM</option>
-                            <option value="13:00">1:00 PM</option>
-                            <option value="14:00">2:00 PM</option>
-                            <option value="15:00">3:00 PM</option>
-                            <option value="16:00">4:00 PM</option>
-                            <option value="17:00">5:00 PM</option>
-                            <option value="18:00">6:00 PM</option>
-                            <option value="19:00">7:00 PM</option>
-                            <option value="20:00">8:00 PM</option>
-                            <option value="21:00">9:00 PM</option>
-                          </select>
-                        </div>
-
-                        {/* Time conflict warning */}
-                        {slot.startTime &&
-                          slot.endTime &&
-                          slot.startTime >= slot.endTime && (
-                            <div className="mt-3 flex items-center text-amber-600 bg-amber-50 p-2 rounded-md text-sm">
-                              <AlertTriangle className="w-4 h-4 mr-2 flex-shrink-0" />
-                              End time must be later than start time
-                            </div>
-                          )}
                       </div>
                     ))
-                  )}
-                </div>
-              </div>
-            )}
-            {activeSection === "sessions" && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                      <Shield className="w-5 h-5 mr-2 text-blue-500" />
-                      Active Session Information
-                    </h2>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Details about your current login session
-                    </p>
-                  </div>
-                  <button
-                    onClick={fetchSessionInfo}
-                    className="flex items-center text-blue-600 hover:text-blue-700"
-                  >
-                    <RefreshCw
-                      className={`h-4 w-4 mr-1 ${
-                        loadingSession ? "animate-spin" : ""
-                      }`}
-                    />
-                    <span className="text-sm">Refresh</span>
-                  </button>
-                </div>
-
-                {loadingSession ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="w-8 h-8 border-2 border-t-transparent border-blue-500 border-solid rounded-full animate-spin" />
-                    <span className="ml-3 text-blue-600">
-                      Loading session information...
-                    </span>
-                  </div>
-                ) : sessionError ? (
-                  <div className="bg-red-50 border border-red-100 rounded-lg p-4 text-red-700">
-                    <div className="flex">
-                      <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0" />
-                      <span>{sessionError}</span>
-                    </div>
-                  </div>
-                ) : sessionInfo ? (
-                  <div className="space-y-4">
-                    {/* Current Session Card */}
-                    <div className="bg-white rounded-lg border border-blue-200 shadow-sm overflow-hidden">
-                      <div className="bg-blue-50 px-4 py-3 border-b border-blue-100">
-                        <div className="flex items-center">
-                          <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                            <Shield className="h-4 w-4 text-blue-600" />
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-blue-800">
-                              Current Session
-                            </h3>
-                            <p className="text-xs text-blue-600">
-                              {sessionInfo.lastLoginIP &&
-                                `IP: ${sessionInfo.lastLoginIP}`}
-                            </p>
-                          </div>
-                          <div className="ml-auto flex items-center">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              <span className="w-2 h-2 rounded-full bg-green-500 mr-1.5"></span>
-                              Active
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="p-4">
-                        <div className="grid grid-cols-1 gap-y-4 md:grid-cols-2 md:gap-x-6">
-                          <div>
-                            <p className="text-sm font-medium text-gray-500">
-                              Login Time
-                            </p>
-                            <p className="mt-1 text-sm text-gray-800">
-                              {sessionInfo.lastLogin
-                                ? new Date(
-                                    sessionInfo.lastLogin
-                                  ).toLocaleString()
-                                : "N/A"}
-                            </p>
-                          </div>
-
-                          <div>
-                            <p className="text-sm font-medium text-gray-500">
-                              Session Expires
-                            </p>
-                            <p className="mt-1 text-sm text-gray-800">
-                              {sessionInfo.sessionExpiresAt
-                                ? new Date(
-                                    sessionInfo.sessionExpiresAt
-                                  ).toLocaleString()
-                                : "N/A"}
-                            </p>
-                          </div>
-
-                          <div>
-                            <p className="text-sm font-medium text-gray-500">
-                              IP Address
-                            </p>
-                            <p className="mt-1 text-sm text-gray-800">
-                              {sessionInfo.lastLoginIP || "Unknown"}
-                            </p>
-                          </div>
-
-                          <div>
-                            <p className="text-sm font-medium text-gray-500">
-                              Session Duration
-                            </p>
-                            <p className="mt-1 text-sm text-gray-800">
-                              {sessionInfo.lastLogin &&
-                              sessionInfo.sessionExpiresAt
-                                ? getSessionDuration(
-                                    new Date(sessionInfo.lastLogin),
-                                    new Date(sessionInfo.sessionExpiresAt)
-                                  )
-                                : "N/A"}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                          <Clock className="w-5 h-5 mr-2 text-blue-500" />
-                          Session History
-                        </h3>
-                      </div>
-
-                      {loadingHistory ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="w-8 h-8 border-2 border-t-transparent border-blue-500 border-solid rounded-full animate-spin" />
-                          <span className="ml-3 text-blue-600">
-                            Loading session history...
-                          </span>
-                        </div>
-                      ) : historyError ? (
-                        <div className="bg-red-50 border border-red-100 rounded-lg p-4 text-red-700">
-                          <div className="flex">
-                            <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0" />
-                            <span>{historyError}</span>
-                          </div>
-                        </div>
-                      ) : sessionHistory.length === 0 ? (
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center text-gray-500">
-                          <Clock className="h-10 w-10 mx-auto text-gray-400 mb-3" />
-                          <p>No session history available</p>
-                        </div>
-                      ) : (
-                        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                          <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                              <thead className="bg-gray-50">
-                                <tr>
-                                  <th
-                                    scope="col"
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                  >
-                                    Login Time
-                                  </th>
-                                  <th
-                                    scope="col"
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                  >
-                                    Logout Time
-                                  </th>
-                                  <th
-                                    scope="col"
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                  >
-                                    IP Address
-                                  </th>
-                                  <th
-                                    scope="col"
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                  >
-                                    Device Info
-                                  </th>
-                                  <th
-                                    scope="col"
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                  >
-                                    Duration
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody className="bg-white divide-y divide-gray-200">
-                                {sessionHistory
-                                  .slice()
-                                  .reverse()
-                                  .map((session, index) => (
-                                    <tr
-                                      key={index}
-                                      className={
-                                        session.logoutTime
-                                          ? "bg-white"
-                                          : "bg-green-50"
-                                      }
-                                    >
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {formatDate(session.loginTime)}
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {session.logoutTime ? (
-                                          formatDate(session.logoutTime)
-                                        ) : (
-                                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            Active Session
-                                          </span>
-                                        )}
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {session.ipAddress || "Unknown"}
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        <div className="truncate max-w-xs">
-                                          {session.userAgent || "Unknown"}
-                                        </div>
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {session.loginTime &&
-                                        (session.logoutTime || new Date())
-                                          ? getSessionDuration(
-                                              new Date(session.loginTime),
-                                              new Date(
-                                                session.logoutTime || new Date()
-                                              )
-                                            )
-                                          : "N/A"}
-                                      </td>
-                                    </tr>
-                                  ))}
-                              </tbody>
-                            </table>
-                          </div>
-                          {sessionHistory.length > 5 && (
-                            <div className="px-6 py-3 bg-gray-50 text-center">
-                              <p className="text-sm text-gray-500">
-                                Showing recent {sessionHistory.length} login
-                                sessions
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    {/* Security Tips Card */}
-                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                      <div className="flex">
-                        <div className="flex-shrink-0">
-                          <AlertCircle className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div className="ml-3">
-                          <h3 className="text-sm font-medium text-blue-800">
-                            Session Security Tips
-                          </h3>
-                          <div className="mt-2 text-sm text-blue-700">
-                            <ul className="list-disc pl-5 space-y-1">
-                              <li>Always log out when using shared devices</li>
-                              <li>
-                                Your session will automatically expire after 24
-                                hours
-                              </li>
-                              <li>
-                                If you notice suspicious activity, change your
-                                password immediately
-                              </li>
-                              <li>
-                                Only one active session is allowed at a time for
-                                security
-                              </li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center text-gray-500">
-                    <Shield className="h-10 w-10 mx-auto text-gray-400 mb-3" />
-                    <p>No session information available</p>
-                  </div>
-                )}
-              </div>
-            )}
-            {/* Password Change Section */}
-            {activeSection === "password" && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                      <Lock className="w-5 h-5 mr-2 text-blue-500" />
-                      Change Password
-                    </h2>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Update your account password
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg border border-gray-200 p-5">
-                  <form onSubmit={changePassword} className="space-y-5">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Current Password
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                          <Key className="w-5 h-5 text-blue-500" />
-                        </div>
-                        <input
-                          type={showCurrentPassword ? "text" : "password"}
-                          name="currentPassword"
-                          value={passwordData.currentPassword}
-                          onChange={onPasswordChange}
-                          placeholder="Enter your current password"
-                          className="pl-10 w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                          required
-                        />
-                        <button
-                          type="button"
-                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                          onClick={() =>
-                            setShowCurrentPassword(!showCurrentPassword)
-                          }
-                        >
-                          {showCurrentPassword ? (
-                            <EyeOff className="w-5 h-5" />
-                          ) : (
-                            <Eye className="w-5 h-5" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        New Password
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                          <Lock className="w-5 h-5 text-blue-500" />
-                        </div>
-                        <input
-                          type={showNewPassword ? "text" : "password"}
-                          name="newPassword"
-                          value={passwordData.newPassword}
-                          onChange={onPasswordChange}
-                          placeholder="Enter your new password"
-                          className="pl-10 w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                          required
-                          minLength="6"
-                        />
-                        <button
-                          type="button"
-                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                          onClick={() => setShowNewPassword(!showNewPassword)}
-                        >
-                          {showNewPassword ? (
-                            <EyeOff className="w-5 h-5" />
-                          ) : (
-                            <Eye className="w-5 h-5" />
-                          )}
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1 ml-1">
-                        Password must be at least 6 characters long
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Confirm New Password
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                          <Lock className="w-5 h-5 text-blue-500" />
-                        </div>
-                        <input
-                          type={showConfirmPassword ? "text" : "password"}
-                          name="confirmPassword"
-                          value={passwordData.confirmPassword}
-                          onChange={onPasswordChange}
-                          placeholder="Confirm your new password"
-                          className="pl-10 w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                          required
-                        />
-                        <button
-                          type="button"
-                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOff className="w-5 h-5" />
-                          ) : (
-                            <Eye className="w-5 h-5" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    {passwordData.newPassword &&
-                      passwordData.confirmPassword &&
-                      passwordData.newPassword !==
-                        passwordData.confirmPassword && (
-                        <div className="flex items-center text-red-600 bg-red-50 p-2 rounded-md text-sm">
-                          <AlertTriangle className="w-4 h-4 mr-2 flex-shrink-0" />
-                          Passwords don't match
-                        </div>
-                      )}
-
-                    <div className="pt-2">
+                  ) : (
+                    <div className="text-center py-8 bg-[#171B24] rounded-lg border border-dashed border-gray-700">
+                      <Clock className="h-12 w-12 text-gray-500 mx-auto mb-3" />
+                      <p className="text-gray-400 mb-4">No availability set</p>
                       <button
-                        type="submit"
-                        disabled={
-                          passwordSaving ||
-                          !passwordData.currentPassword ||
-                          !passwordData.newPassword ||
-                          !passwordData.confirmPassword ||
-                          passwordData.newPassword !==
-                            passwordData.confirmPassword
-                        }
-                        className={`w-full px-4 py-2 rounded-lg transition-all flex items-center justify-center ${
-                          passwordSaving ||
-                          !passwordData.currentPassword ||
-                          !passwordData.newPassword ||
-                          !passwordData.confirmPassword ||
-                          passwordData.newPassword !==
-                            passwordData.confirmPassword
-                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                            : "bg-gradient-to-r from-blue-500 to-cyan-400 text-white hover:from-blue-600 hover:to-cyan-500"
-                        }`}
+                        onClick={onAddAvailability}
+                        className="px-4 py-2 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/30 flex items-center mx-auto text-sm font-medium"
                       >
-                        {passwordSaving ? (
-                          <>
-                            <div className="w-5 h-5 border-2 border-t-transparent border-white border-solid rounded-full animate-spin mr-2" />
-                            Updating Password...
-                          </>
-                        ) : (
-                          <>
-                            <Key className="w-4 h-4 mr-2" />
-                            Update Password
-                          </>
-                        )}
+                        <CirclePlus className="w-4 h-4 mr-2" />
+                        Add Availability
                       </button>
                     </div>
-                  </form>
+                  )}
                 </div>
 
-                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <AlertCircle className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="text-sm font-medium text-blue-800">
-                        Password Security Tips
-                      </h3>
-                      <div className="mt-2 text-sm text-blue-700">
-                        <ul className="list-disc pl-5 space-y-1">
-                          <li>
-                            Use a combination of letters, numbers, and symbols
-                          </li>
-                          <li>Avoid using easily guessable information</li>
-                          <li>Use a different password than other accounts</li>
-                          <li>Consider using a password manager</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
+                <div className="flex justify-end pt-4">
+                  <button
+                    onClick={saveChanges}
+                    disabled={!hasChanges() || saveLoading}
+                    className={`px-6 py-2.5 rounded-lg text-white font-medium flex items-center gap-2 ${
+                      hasChanges() && !saveLoading
+                        ? "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600"
+                        : "bg-gray-700 cursor-not-allowed"
+                    }`}
+                  >
+                    {saveLoading ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        Save Changes
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             )}
 
-            {/* Save Changes Button - only show for general and availability tabs */}
-            {(activeSection === "general" ||
-              activeSection === "availability") && (
-              <div className="flex justify-end mt-8 pt-4 border-t border-gray-100">
-                {hasChanges() && (
+            {activeSection === "sessions" && (
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={stagger}
+                className="space-y-6"
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <div>
+                    <h3 className="text-lg font-medium text-white">
+                      Security & Active Sessions
+                    </h3>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Manage your current login sessions and security settings
+                    </p>
+                  </div>
                   <button
-                    onClick={() => {
-                      setDoctor(originalDoctor);
-                      toast("Changes discarded", { icon: "🔄" });
-                    }}
-                    className="px-4 py-2 mr-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center"
+                    onClick={refreshSessionInfo}
+                    disabled={refreshingSession}
+                    className="p-2 rounded-full bg-[#171B24] hover:bg-[#1F242E] text-gray-400 hover:text-blue-400"
                   >
-                    <X className="w-4 h-4 mr-2" />
-                    Discard
+                    <RefreshCw
+                      className={`h-5 w-5 ${
+                        refreshingSession ? "animate-spin text-blue-400" : ""
+                      }`}
+                    />
                   </button>
-                )}
+                </div>
 
-                <button
-                  onClick={saveChanges}
-                  disabled={!hasChanges() || saveLoading}
-                  className={`px-6 py-2.5 rounded-lg transition-all flex items-center justify-center ${
-                    !hasChanges()
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-blue-500 to-cyan-400 text-white hover:from-blue-600 hover:to-cyan-500"
-                  }`}
+                <motion.div variants={fadeIn} className="relative">
+                  <div className="absolute bottom-0 -right-6 w-24 h-24 bg-blue-500 rounded-full opacity-5 blur-xl"></div>
+                  <div className="absolute -top-6 -left-6 w-24 h-24 bg-cyan-400 rounded-full opacity-5 blur-xl"></div>
+
+                  <div className="bg-[#0D1117] border border-gray-800 rounded-xl overflow-hidden">
+                    <div className="p-4 md:p-6 bg-gradient-to-r from-blue-600/10 to-blue-400/10 border-b border-blue-500/20">
+                      <h4 className="font-medium text-white flex items-center">
+                        <Shield className="mr-2 h-5 w-5 text-blue-400" />
+                        Current Active Session
+                      </h4>
+                    </div>
+
+                    <div className="p-6">
+                      {loadingSession ? (
+                        <div className="flex justify-center items-center py-8">
+                          <RefreshCw className="h-6 w-6 text-blue-500 animate-spin" />
+                        </div>
+                      ) : sessionError ? (
+                        <div className="flex flex-col items-center justify-center py-8">
+                          <div className="h-16 w-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
+                            <AlertCircle className="h-8 w-8 text-red-400" />
+                          </div>
+                          <h3 className="text-lg font-medium text-gray-200 mb-2">
+                            Session Error
+                          </h3>
+                          <p className="text-gray-400 text-center max-w-md">
+                            {sessionError}
+                          </p>
+                          <button
+                            onClick={refreshSessionInfo}
+                            className="mt-4 px-4 py-2 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/30 flex items-center text-sm font-medium"
+                          >
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Retry
+                          </button>
+                        </div>
+                      ) : sessionInfo ? (
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-600/20 to-blue-400/20 flex items-center justify-center mb-3">
+                                <Laptop className="h-7 w-7 text-blue-400" />
+                              </div>
+                              <div className="mb-2">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-400 border border-green-700/30">
+                                  <span className="w-2 h-2 mr-1 bg-green-500 rounded-full"></span>
+                                  Active Now
+                                </span>
+                              </div>
+                              <h4 className="font-medium text-gray-100 text-lg mb-1">
+                                Current Device
+                              </h4>
+                              <p className="text-sm text-gray-400">
+                                {sessionInfo.lastLoginIP || "Unknown device"}
+                              </p>
+                            </div>
+
+                            <div className="bg-[#171B24] rounded-lg p-4">
+                              <div className="grid grid-cols-1 gap-3">
+                                <div>
+                                  <p className="text-xs text-gray-500 mb-1">
+                                    IP Address
+                                  </p>
+                                  <p className="text-sm font-medium text-gray-200 bg-[#0D1117] p-2 rounded border border-gray-700">
+                                    {sessionInfo.lastLoginIP || "Unknown"}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-500 mb-1">
+                                    Started At
+                                  </p>
+                                  <p className="text-sm text-gray-300">
+                                    {formatDate(sessionInfo.lastLogin)}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-500 mb-1">
+                                    Expires At
+                                  </p>
+                                  <p className="text-sm text-gray-300">
+                                    {formatDate(sessionInfo.sessionExpiresAt)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="border-t border-gray-800 pt-4">
+                            <div className="flex justify-end">
+                              <button
+                                onClick={() =>
+                                  terminateSession(sessionInfo.sessionId)
+                                }
+                                className="px-4 py-2 bg-red-900/20 text-red-400 border border-red-900/30 rounded-lg hover:bg-red-900/30 flex items-center text-sm font-medium"
+                              >
+                                <Lock className="h-4 w-4 mr-2" />
+                                End This Session
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-yellow-600/20 to-yellow-400/20 flex items-center justify-center mx-auto mb-4">
+                            <AlertTriangle className="h-8 w-8 text-yellow-400" />
+                          </div>
+                          <h3 className="text-lg font-medium text-gray-100 mb-2">
+                            No active session
+                          </h3>
+                          <p className="text-gray-400">
+                            Your session information is not available
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div variants={fadeIn} className="mt-8">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium text-white">
+                      Session History
+                    </h3>
+                    {loadingHistory && !historyError && (
+                      <div className="flex items-center">
+                        <RefreshCw className="h-4 w-4 text-gray-400 animate-spin mr-2" />
+                        <span className="text-sm text-gray-400">
+                          Loading...
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="bg-[#0D1117] border border-gray-800 rounded-xl overflow-hidden">
+                    <div className="p-4 border-b border-gray-800 bg-gradient-to-r from-blue-600/5 to-cyan-500/5">
+                      <h4 className="font-medium text-gray-100 flex items-center">
+                        <Clock className="mr-2 h-5 w-5 text-cyan-400" />
+                        Recent Login Activity
+                      </h4>
+                    </div>
+
+                    {historyError ? (
+                      <div className="text-center py-8">
+                        <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-3" />
+                        <p className="text-gray-400">{historyError}</p>
+                        <button
+                          onClick={fetchSessionHistory}
+                          className="mt-4 px-4 py-2 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/30 flex items-center mx-auto text-sm font-medium"
+                        >
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Try Again
+                        </button>
+                      </div>
+                    ) : sessionHistory && sessionHistory.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-800">
+                          <thead className="bg-[#171B24]">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Device
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                IP Address
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Started
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Duration
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Status
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-800">
+                            {sessionHistory.map((session) => {
+                              // Determine device type from user agent
+                              let deviceType = "Unknown";
+                              if (session.userAgent) {
+                                if (session.userAgent.includes("Mobile")) {
+                                  deviceType = "Mobile Device";
+                                } else if (
+                                  session.userAgent.includes("Windows")
+                                ) {
+                                  deviceType = "Windows PC";
+                                } else if (session.userAgent.includes("Mac")) {
+                                  deviceType = "Mac";
+                                } else if (
+                                  session.userAgent.includes("Linux")
+                                ) {
+                                  deviceType = "Linux";
+                                } else if (
+                                  session.userAgent.includes("iPhone")
+                                ) {
+                                  deviceType = "iPhone";
+                                } else if (
+                                  session.userAgent.includes("Android")
+                                ) {
+                                  deviceType = "Android";
+                                }
+                              }
+
+                              return (
+                                <tr
+                                  key={session._id}
+                                  className="hover:bg-[#1A1E26]"
+                                >
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                    <div className="flex items-center">
+                                      <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center mr-3">
+                                        <Globe className="h-4 w-4 text-gray-300" />
+                                      </div>
+                                      <div>
+                                        <div className="font-medium">
+                                          {deviceType}
+                                        </div>
+                                        <div className="text-xs text-gray-500 max-w-xs truncate">
+                                          {session.userAgent}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                    {session.ipAddress || "Unknown"}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                    {formatDate(session.loginTime)}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                    {getSessionDuration(
+                                      session.loginTime,
+                                      session.logoutTime || new Date()
+                                    )}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                    {!session.logoutTime ? (
+                                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-400 border border-green-700/30">
+                                        <span className="w-1.5 h-1.5 mr-1 bg-green-500 rounded-full"></span>
+                                        Active
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-800 text-gray-400 border border-gray-700">
+                                        Ended
+                                      </span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Clock className="h-12 w-12 text-gray-600 mx-auto mb-3" />
+                        <p className="text-gray-400">
+                          No session history available
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  variants={fadeIn}
+                  className="mt-6 border-t border-gray-800 pt-6"
                 >
-                  {saveLoading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-t-transparent border-white border-solid rounded-full animate-spin mr-2" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Changes
-                    </>
-                  )}
-                </button>
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 rounded-lg bg-gradient-to-br from-yellow-600/10 to-yellow-400/10 text-yellow-400">
+                      <AlertTriangle className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-medium text-white mb-2">
+                        Security Recommendations
+                      </h4>
+                      <ul className="space-y-2 text-gray-400">
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-5 w-5 text-green-400 flex-shrink-0 mt-0.5" />
+                          <span>Always log out from shared devices</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-5 w-5 text-green-400 flex-shrink-0 mt-0.5" />
+                          <span>
+                            Use a strong, unique password for your account
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-5 w-5 text-green-400 flex-shrink-0 mt-0.5" />
+                          <span>
+                            Review your login history regularly for suspicious
+                            activity
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+
+            {activeSection === "password" && (
+              <div>
+                <div className="max-w-md mx-auto">
+                  <div className="bg-[#171B24] border border-gray-800 rounded-lg p-6">
+                    <h3 className="text-lg font-medium text-white mb-4">
+                      Change Password
+                    </h3>
+
+                    <form onSubmit={changePassword} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">
+                          Current Password
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Key className="h-5 w-5 text-gray-500" />
+                          </div>
+                          <input
+                            type={showCurrentPassword ? "text" : "password"}
+                            name="currentPassword"
+                            value={passwordData.currentPassword}
+                            onChange={onPasswordChange}
+                            className="pl-10 pr-10 w-full py-2 bg-[#0D1117] border border-gray-700 rounded-lg text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter current password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowCurrentPassword(!showCurrentPassword)
+                            }
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                          >
+                            {showCurrentPassword ? (
+                              <EyeOff className="h-5 w-5 text-gray-500" />
+                            ) : (
+                              <Eye className="h-5 w-5 text-gray-500" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">
+                          New Password
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Lock className="h-5 w-5 text-gray-500" />
+                          </div>
+                          <input
+                            type={showNewPassword ? "text" : "password"}
+                            name="newPassword"
+                            value={passwordData.newPassword}
+                            onChange={onPasswordChange}
+                            className="pl-10 pr-10 w-full py-2 bg-[#0D1117] border border-gray-700 rounded-lg text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter new password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                          >
+                            {showNewPassword ? (
+                              <EyeOff className="h-5 w-5 text-gray-500" />
+                            ) : (
+                              <Eye className="h-5 w-5 text-gray-500" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">
+                          Confirm New Password
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Lock className="h-5 w-5 text-gray-500" />
+                          </div>
+                          <input
+                            type={showConfirmPassword ? "text" : "password"}
+                            name="confirmPassword"
+                            value={passwordData.confirmPassword}
+                            onChange={onPasswordChange}
+                            className="pl-10 pr-10 w-full py-2 bg-[#0D1117] border border-gray-700 rounded-lg text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Confirm new password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowConfirmPassword(!showConfirmPassword)
+                            }
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff className="h-5 w-5 text-gray-500" />
+                            ) : (
+                              <Eye className="h-5 w-5 text-gray-500" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end pt-4">
+                        <button
+                          type="submit"
+                          disabled={passwordSaving}
+                          className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-lg font-medium transition-all duration-300 flex items-center"
+                        >
+                          {passwordSaving ? (
+                            <>
+                              <RefreshCw className="animate-spin -ml-1 mr-2 h-4 w-4" />
+                              Changing...
+                            </>
+                          ) : (
+                            <>Change Password</>
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
+                  <div className="mt-6 bg-[#0D1117]/50 border border-gray-800/50 rounded-lg p-4">
+                    <div className="flex items-start mb-2">
+                      <AlertTriangle className="text-yellow-500 h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-200">
+                          Password Requirements
+                        </h4>
+                      </div>
+                    </div>
+                    <ul className="list-disc text-xs text-gray-400 ml-8 space-y-1">
+                      <li>Must be at least 6 characters long</li>
+                      <li>Include both uppercase and lowercase letters</li>
+                      <li>Include at least one number</li>
+                      <li>Include at least one special character</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             )}
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: "#1A1E26",
+            color: "#fff",
+            border: "1px solid rgba(59, 130, 246, 0.2)",
+          },
+          success: {
+            iconTheme: {
+              primary: "#10B981",
+              secondary: "#1A1E26",
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: "#EF4444",
+              secondary: "#1A1E26",
+            },
+          },
+        }}
+      />
     </div>
   );
 }
@@ -1144,7 +1163,7 @@ const ProfileField = ({
   ...props
 }) => (
   <div className="w-full">
-    <label className="block text-sm font-medium text-gray-700 mb-1">
+    <label className="block text-sm font-medium text-gray-300 mb-1">
       {label}
     </label>
     <div className="relative">
@@ -1157,11 +1176,15 @@ const ProfileField = ({
           name={name}
           value={value}
           onChange={onChange}
-          className="pl-10 w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none capitalize"
+          className="pl-10 w-full px-3 py-2.5 bg-[#171B24] border border-gray-700 rounded-lg text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none capitalize"
           {...props}
         >
           {options.map((option) => (
-            <option key={option.value} value={option.value}>
+            <option
+              key={option.value}
+              value={option.value}
+              className="bg-[#171B24] text-white"
+            >
               {option.label}
             </option>
           ))}
@@ -1173,7 +1196,7 @@ const ProfileField = ({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className="pl-10 w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+          className="pl-10 w-full px-3 py-2.5 bg-[#171B24] border border-gray-700 rounded-lg text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
           {...props}
         />
       )}
@@ -1182,10 +1205,10 @@ const ProfileField = ({
 );
 
 const LoadingState = () => (
-  <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+  <div className="flex flex-col items-center justify-center min-h-screen bg-[#0A0C10]">
     <div className="relative">
-      <div className="w-20 h-20 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin"></div>
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-blue-500 rounded-full animate-pulse opacity-70"></div>
+      <div className="w-20 h-20 border-4 border-blue-900/40 border-t-blue-500 rounded-full animate-spin"></div>
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-full animate-pulse opacity-70"></div>
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
         <svg
           className="w-6 h-6 text-white"
@@ -1202,7 +1225,7 @@ const LoadingState = () => (
         </svg>
       </div>
     </div>
-    <div className="mt-6 text-blue-700 font-medium">
+    <div className="mt-6 text-blue-400 font-medium">
       Loading your profile...
     </div>
   </div>

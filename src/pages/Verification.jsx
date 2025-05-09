@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, Loader } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
 import Logo from "../components/Logo";
+import { motion } from "framer-motion";
+import { FaArrowRight, FaEnvelope, FaLock } from "react-icons/fa";
 
 function VerifyEmail() {
   const { token } = useParams();
@@ -43,77 +45,111 @@ function VerifyEmail() {
   }, [token, navigate]);
 
   return (
-    <div>
-      <div className="h-screen max-sm:p-2 relative bg-gradient-to-br from-blue-100 via-white to-blue-100 flex justify-center items-center overflow-hidden">
-        <div className="mx-auto w-full max-w-[410px] z-10 p-4 md:p-6 rounded-md bg-blue-100/50 border border-blue-600/20">
-          <div className="flex flex-col justify-center text-center gap-2">
-            <div className="flex flex-col gap-1 items-center">
-              <Logo
-                className="text-2xl sm:text-3xl"
-                font="text-xl sm:text-2xl"
-              />
-              <span className="text-blue-700 font-semibold text-xs sm:text-sm">
-                Email Verification
-              </span>
-            </div>
+    <div className="min-h-screen bg-[#0A0C10] text-gray-100">
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-1/2 h-screen bg-gradient-to-bl from-blue-500/5 to-transparent"></div>
+        <div className="absolute top-40 -left-32 w-64 h-64 rounded-full bg-gradient-to-r from-blue-600/20 to-cyan-400/20 blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-gradient-to-l from-indigo-600/10 to-purple-400/10 blur-3xl"></div>
 
-            <div className="mt-6 flex flex-col items-center">
-              {verificationState === "verifying" && (
-                <div className="flex flex-col items-center py-8">
-                  <div className="w-12 h-12 border-4 border-t-transparent border-blue-600 border-solid rounded-full animate-spin mb-4" />
-                  <p className="text-blue-600 text-lg">
-                    Verifying your email address...
-                  </p>
-                </div>
-              )}
+        <div className="relative max-w-lg mx-auto px-4 sm:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="rounded-xl bg-gradient-to-r p-[1px] from-blue-500 to-cyan-400"
+          >
+            <div className="rounded-xl bg-[#0D1117] p-6 md:p-8 backdrop-blur-3xl">
+              <div className="flex flex-col items-center justify-center mb-6">
+                <Logo
+                  className="text-2xl sm:text-3xl"
+                  font="text-xl sm:text-2xl"
+                />
+                <h2 className="mt-4 text-xl font-bold text-gray-100">
+                  Email Verification
+                </h2>
+              </div>
 
-              {verificationState === "success" && (
-                <div className="flex flex-col items-center py-6">
-                  <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
-                  <p className="text-blue-800 text-xl font-semibold mb-2">
-                    Email Verified!
-                  </p>
-                  <p className="text-blue-600 text-center mb-4">{message}</p>
-                  <p className="text-sm text-blue-500 mb-6">
-                    You will be redirected to login in a few seconds...
-                  </p>
-                  <button
-                    onClick={() => navigate("/login")}
-                    className="bg-blue-600 py-2 px-6 gap-2 rounded-md text-white w-full max-w-[200px] hover:bg-blue-700"
+              <div className="flex flex-col items-center py-4">
+                {verificationState === "verifying" && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex flex-col items-center py-6"
                   >
-                    Go to Login
-                  </button>
-                </div>
-              )}
+                    <div className="w-16 h-16 mb-4 flex justify-center items-center">
+                      <Loader className="h-12 w-12 text-blue-400 animate-spin" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-100 mb-3">
+                      Verifying your email
+                    </h3>
+                    <p className="text-gray-400 text-center">
+                      Please wait while we confirm your email address...
+                    </p>
+                  </motion.div>
+                )}
 
-              {verificationState === "error" && (
-                <div className="flex flex-col items-center py-6">
-                  <XCircle className="h-16 w-16 text-red-500 mb-4" />
-                  <p className="text-blue-800 text-xl font-semibold mb-2">
-                    Verification Failed
-                  </p>
-                  <p className="text-blue-600 text-center mb-6">{message}</p>
-                  <div className="flex flex-col sm:flex-row gap-3 w-full max-w-[300px]">
-                    <button
-                      onClick={() => navigate("/login")}
-                      className="bg-gray-200 py-2 px-4 rounded-md text-blue-800 hover:bg-gray-300 flex-1"
-                    >
-                      Go to Login
-                    </button>
-                    <button
-                      onClick={() => navigate("/resend-verification")}
-                      className="bg-blue-600 py-2 px-4 rounded-md text-white hover:bg-blue-700 flex-1"
-                    >
-                      Resend Verification
-                    </button>
-                  </div>
-                </div>
-              )}
+                {verificationState === "success" && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center py-6"
+                  >
+                    <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-green-400/20 rounded-full flex items-center justify-center mb-6">
+                      <CheckCircle className="h-10 w-10 text-green-500" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-100 mb-3">
+                      Email Verified Successfully!
+                    </h3>
+                    <p className="text-gray-400 text-center mb-6">{message}</p>
+                    <p className="text-sm text-gray-500 mb-8">
+                      You will be redirected to login in a few seconds...
+                    </p>
+                    <Link to="/login">
+                      <button className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 flex items-center justify-center group">
+                        Go to Login
+                        <FaArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </button>
+                    </Link>
+                  </motion.div>
+                )}
+
+                {verificationState === "error" && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center py-6"
+                  >
+                    <div className="w-20 h-20 bg-gradient-to-br from-red-500/20 to-red-400/20 rounded-full flex items-center justify-center mb-6">
+                      <XCircle className="h-10 w-10 text-red-500" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-100 mb-3">
+                      Verification Failed
+                    </h3>
+                    <p className="text-gray-400 text-center mb-8">{message}</p>
+                    <div className="flex flex-col sm:flex-row gap-4 w-full">
+                      <Link to="/login" className="w-full sm:w-auto">
+                        <button className="w-full bg-[#171B24] border border-gray-700 text-gray-300 px-6 py-3 rounded-lg font-medium hover:bg-[#1F242E] transition-all duration-300">
+                          Back to Login
+                        </button>
+                      </Link>
+                      <Link
+                        to="/resend-verification"
+                        className="w-full sm:w-auto"
+                      >
+                        <button className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 flex items-center justify-center group">
+                          Resend Verification
+                          <FaArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        </button>
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </div>
-      <Toaster />
+      </section>
     </div>
   );
 }

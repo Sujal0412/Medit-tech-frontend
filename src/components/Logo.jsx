@@ -2,8 +2,12 @@ import React from "react";
 
 const Logo = ({ className, font }) => (
   <div className={`flex items-center ${className}`}>
-    <span className={`font-bold text-blue-600 ${font}`}>
-      Medi<span className="text-teal-500">Tech</span>
+    <span className={`font-bold ${font}`}>
+      <span
+        className={`bg-clip-text ${className} text-transparent bg-gradient-to-r from-blue-400 to-cyan-400`}
+      >
+        Medi<span className={`text-white ${className}`}>Tech</span>
+      </span>
     </span>
   </div>
 );
