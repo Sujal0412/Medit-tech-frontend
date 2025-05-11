@@ -94,9 +94,11 @@ function MediTechLanding() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.1 }}
-              className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 tracking-tight"
+              className="text-4xl sm:text-5xl md:text-6xl  font-bold mb-6 tracking-tight "
             >
-              Modern Healthcare
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-300 to-cyan-300">
+                Modern Healthcare
+              </span>
               <br />
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-400">
                 Queue Management
