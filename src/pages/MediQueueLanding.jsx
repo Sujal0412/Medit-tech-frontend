@@ -46,22 +46,22 @@ function MediTechLanding() {
 
   const testimonials = [
     {
-      name: "Dr. Sarah Johnson",
-      role: "Chief of Cardiology",
+      name: "Prajesh Majithiya",
+      role: "Frontend Developer",
       quote:
-        "The patient monitoring system has revolutionized how we deliver care in the ICU. Real-time alerts have helped us intervene faster and improve outcomes.",
+        "Building the user interface for the monitoring system was both challenging and rewarding. Seeing clinicians interact with a tool we crafted is incredibly fulfilling.",
     },
     {
-      name: "Mark Williams",
-      role: "Healthcare IT Director",
+      name: "Sujal Lukhi",
+      role: "Backend Engineer",
       quote:
-        "Implementation was seamless, and the training provided was exceptional. Our staff adapted quickly, and we've seen a 30% improvement in workflow efficiency.",
+        "Designing a scalable backend to handle real-time alerts and patient data was a critical task. It’s gratifying to know our work directly supports life-saving decisions.",
     },
     {
-      name: "Dr. Emily Chen",
-      role: "Neurologist",
+      name: "Deep Marodiya",
+      role: "Frontend Developer",
       quote:
-        "The telemedicine platform has allowed us to extend our reach to rural communities that previously had limited access to specialist care.",
+        "Crafting intuitive, accessible UI for healthcare professionals was a top priority. Knowing our design helps doctors respond faster makes every pixel worth it.",
     },
   ];
 
@@ -313,7 +313,9 @@ function MediTechLanding() {
                           </div>
                           <div className="space-y-1 xs:space-y-1.5 sm:space-y-2 flex-grow">
                             <div className="flex justify-between items-center">
-                              <div className="text-[8px] xs:text-[9px] sm:text-xs">Cardiology</div>
+                              <div className="text-[8px] xs:text-[9px] sm:text-xs">
+                                Cardiology
+                              </div>
                               <div className="text-[8px] xs:text-[9px] sm:text-xs font-medium text-blue-400">
                                 12
                               </div>
@@ -326,7 +328,9 @@ function MediTechLanding() {
                             </div>
 
                             <div className="flex justify-between items-center">
-                              <div className="text-[8px] xs:text-[9px] sm:text-xs">Neurology</div>
+                              <div className="text-[8px] xs:text-[9px] sm:text-xs">
+                                Neurology
+                              </div>
                               <div className="text-[8px] xs:text-[9px] sm:text-xs font-medium text-blue-400">
                                 8
                               </div>
@@ -339,7 +343,9 @@ function MediTechLanding() {
                             </div>
 
                             <div className="flex justify-between items-center">
-                              <div className="text-[8px] xs:text-[9px] sm:text-xs">Orthopedics</div>
+                              <div className="text-[8px] xs:text-[9px] sm:text-xs">
+                                Orthopedics
+                              </div>
                               <div className="text-[8px] xs:text-[9px] sm:text-xs font-medium text-blue-400">
                                 5
                               </div>
@@ -352,7 +358,9 @@ function MediTechLanding() {
                             </div>
 
                             <div className="flex justify-between items-center">
-                              <div className="text-[8px] xs:text-[9px] sm:text-xs">Pediatrics</div>
+                              <div className="text-[8px] xs:text-[9px] sm:text-xs">
+                                Pediatrics
+                              </div>
                               <div className="text-[8px] xs:text-[9px] sm:text-xs font-medium text-blue-400">
                                 2
                               </div>
@@ -374,15 +382,21 @@ function MediTechLanding() {
                           <div className="space-y-1 flex-grow">
                             <div className="flex items-center justify-between">
                               <div className="text-[8px]">Cardiology</div>
-                              <div className="text-[8px] font-medium text-blue-400">12</div>
+                              <div className="text-[8px] font-medium text-blue-400">
+                                12
+                              </div>
                             </div>
                             <div className="flex items-center justify-between">
                               <div className="text-[8px]">Neurology</div>
-                              <div className="text-[8px] font-medium text-blue-400">8</div>
+                              <div className="text-[8px] font-medium text-blue-400">
+                                8
+                              </div>
                             </div>
                             <div className="flex items-center justify-between">
                               <div className="text-[8px]">Others</div>
-                              <div className="text-[8px] font-medium text-blue-400">7</div>
+                              <div className="text-[8px] font-medium text-blue-400">
+                                7
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -678,11 +692,6 @@ function MediTechLanding() {
                   </div>
                 </div>
               </div>
-
-              <button className="bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-600 text-white px-8 py-4 rounded-lg font-medium transition-all duration-300 flex items-center group">
-                Learn More About Us{" "}
-                <FaArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
             </motion.div>
           </motion.div>
         </div>
@@ -704,11 +713,11 @@ function MediTechLanding() {
               Testimonials
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold mb-6">
-              Trusted by Healthcare Professionals
+              Built with Passion by Our Development Team
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              See how MediTech has transformed healthcare practices around the
-              world.
+              Hear from the engineers behind MediTech who made this platform
+              possible.
             </p>
           </motion.div>
 
